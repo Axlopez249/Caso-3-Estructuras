@@ -1,15 +1,19 @@
 #include <iostream>
-#include "ChatGPT/include/ChatGPT.h"
-#include "ChatGPT/include/Error.h"
 #include <filesystem>
 #include <string>
 #include <vector>
+#include "ApiServer.cpp"
+#include <unordered_map>
+#include "PalabraLibro.h"
+#include "TemaLibro.h"
+#include "APISynonyms.cpp"
 
 namespace fs = std::filesystem;
 
 int main() {
-    std::string folderPath = "Biblioteca"; // Reemplaza con la ruta de tu carpeta
-    std::vector<std::string> fileNames;
+    string folderPath = "Biblioteca"; // Reemplaza con la ruta de tu carpeta
+    vector<string> fileNames;
+    vector<Libro> libros;
 
     try {
         for (const auto& entry : fs::directory_iterator(folderPath)) {
@@ -17,40 +21,42 @@ int main() {
                 fileNames.push_back(entry.path().filename());
             }
         }
-
-        // Imprimir los nombres de los archivos almacenados en el vector
-        for (const auto& fileName : fileNames) {
-            std::cout << fileName << std::endl;
-        }
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;
     }
 
-    return 0;
-}
+    unordered_map<string, vector<string>> hashTableTemasLibro;
 
-#include <iostream>
+    for (const auto& fileName : fileNames) {
+        //ya tengo los titulos de los libros
+        PalabrasClaves extractorPalabrasClaves = new PalabrasClaves(fileName);
+        vector<string> palabrasLibro = extractorPalabrasClaves.getPalabras();
+        hashTableTemasLibro[fileName] = palabraLibro;
 
+    }
 
-int main(int args,char** argv){
-    //API token as argument
-    OpenAI::ChatGPT chatGpt{argv[1]};
-    try {
-        //type of user and the message to ask
-        auto response = chatGpt.askChatGPT("user","Give me 5 words");
-        //Iterate all answers
-        for(const auto& choice:response.choices){
-            std::cout<<choice.message.content;
+    vector<TemaLibro> temasLibros;
+
+    for (const auto& pair : hashTablePalabrasLibro) {
+        // 'pair.first' es la clave (string)
+        string clave = pair.first;
+
+        // 'pair.second' es el vector correspondiente a la clave
+        vector<string> palabrasClave = pair.second;
+
+        for (const auto& palabra : palabrasClave) {
+            Synonyms extractorSinonimos(palabra);
+            extractorSinonimos.extraccion();
+            vector<string> sinonimospalabra = extractorSinonimos.getSinonimos();
+            TemaLibro sinonimo = new TemaLibro(sinonimospalabra,clave);
+            temasLibros.push_back(sinonimo);
         }
-    }catch(OpenAI::Error& e){
-        //JSON error returned by the server
-        std::cout<<e.what();
+        
     }
-    try {
-        auto response = chatGpt.askWhisper("sound.mp3");
-        std::cout<<response;
-    }catch(OpenAI::Error& e){
-        //JSON error returned by the server
-        std::cout<<e.what();
-    }
+
+
+
+
+    
+    return 0;
 }
