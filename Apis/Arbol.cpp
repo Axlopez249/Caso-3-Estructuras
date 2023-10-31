@@ -7,6 +7,7 @@
 #include "PalabraLibro.h"
 #include "TemaLibro.h"
 #include "APISynonyms.cpp"
+#include "avl.cpp"
 
 namespace fs = std::filesystem;
 
@@ -31,7 +32,7 @@ int main() {
         //ya tengo los titulos de los libros
         PalabrasClaves extractorPalabrasClaves = new PalabrasClaves(fileName);
         vector<string> palabrasLibro = extractorPalabrasClaves.getPalabras();
-        hashTableTemasLibro[fileName] = palabraLibro;
+        hashTableTemasLibro[fileName] = palabrasLibro;
 
     }
 
@@ -43,7 +44,7 @@ int main() {
 
         // 'pair.second' es el vector correspondiente a la clave
         vector<string> palabrasClave = pair.second;
-
+        vector<string> sinonimos;
         for (const auto& palabra : palabrasClave) {
             Synonyms extractorSinonimos(palabra);
             extractorSinonimos.extraccion();
@@ -53,6 +54,24 @@ int main() {
         }
         
     }
+
+    //llamo al arbol
+    BinaryTree tree;
+
+    for (const auto& fileName : fileNames) {
+        //ya tengo los titulos de los libros
+        for (TemaLibro libro : temasLibro)
+        {
+            if (libro.getLibro() == fileName)
+            {
+                for (string tema: libro.getPalabras())
+                {
+                    tree.insert(tema, fileName);
+                } 
+            }
+        }
+    }
+    
 
 
 

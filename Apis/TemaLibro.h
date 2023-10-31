@@ -17,7 +17,7 @@ class TemaLibro {
             libro = plibro;
         }
 
-        vector<string> getPalabra(){
+        vector<string> getPalabras(){
             return temas;
         }
 
