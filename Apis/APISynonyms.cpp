@@ -70,11 +70,3 @@ public:
     }
 };
 
-int main() {
-    std::string palabra = "example"; // Palabra de la que deseas obtener sinónimos
-    Synonyms extractorSinonimos(palabra);
-    extractorSinonimos.extraccion();
-    extractorSinonimos.mostrarSinonimos();
-
-    return 0;
-}
