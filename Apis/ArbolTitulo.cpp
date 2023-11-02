@@ -8,16 +8,17 @@
 #include "TemaLibro.h"
 #include "APISynonyms.cpp"
 #include "avl.cpp"
+#include "Chatgpt.cpp"
 
 namespace fs = std::filesystem;
 using namespace std;
 
-class CompararFrase{
+class ArbolTitulo{
     private:
-
+        unordered_map<std::string, int> ranking;
 
     public:
-        CompararFrase(vector<string> pfrase) {
+        ArbolTitulo(vector<string> pfrase) {//pfrase es el vector de las palabras claves de la frase de busqueda
             string folderPath = "Biblioteca"; // Reemplaza con la ruta de tu carpeta
             vector<string> fileNames;
             vector<Libro> libros;
@@ -36,48 +37,31 @@ class CompararFrase{
 
             for (const auto& fileName : fileNames) {
                 //ya tengo los titulos de los libros
-                PalabrasClaves extractorPalabrasClaves = new PalabrasClaves(fileName);
-                vector<string> palabrasLibro = extractorPalabrasClaves.getPalabras();
-                hashTableTemasLibro[fileName] = palabrasLibro;
+                string prompt = "Dame 5 temas relacionados a este libro: " + fileName;
+                Chatgpt chat = new Chatgpt(prompt);
+                vector<string> palabras = chat.getPalabras();
+                hashTableTemasLibro[fileName] = palabras;
 
-            }
-
-            vector<TemaLibro> temasLibros;
-
-            for (const auto& pair : hashTablePalabrasLibro) {
-                // 'pair.first' es la clave (string)
-                string clave = pair.first;
-
-                // 'pair.second' es el vector correspondiente a la clave
-                vector<string> palabrasClave = pair.second;
-                vector<string> sinonimos;
-                for (const auto& palabra : palabrasClave) {
-                    Synonyms extractorSinonimos(palabra);
-                    extractorSinonimos.extraccion();
-                    vector<string> sinonimospalabra = extractorSinonimos.getSinonimos();
-                    TemaLibro sinonimo = new TemaLibro(sinonimospalabra,clave);
-                    temasLibros.push_back(sinonimo);
-                }
-                
             }
 
             //llamo al arbol
             BinaryTree tree;
             
-            //fileNames es un vector con los títulos de los libros
-            for (const auto& fileName : fileNames) {
-                //ya tengo los titulos de los libros
-                for (TemaLibro libro : temasLibro)
+            //recorrer el hashtable e ir ingresando al arbol
+            for (const auto& element : mapa) {
+
+                string key = element.first;//se saca la llave
+                vector<string> vectorHash = element.second;//se saca el vector
+
+                for (const auto& eleVector : vectorHash)
                 {
-                    if (libro.getLibro() == fileName)
-                    {
-                        for (string tema: libro.getPalabras())
-                        {
-                            tree.insert(tema, fileName);
-                        } 
-                    }
+                    tree.insert(tema, key);//en este caso key es el titulo del libro y tema es cada tema que hay acerca de ese libro
                 }
+                
             }
+
+
+
 
             //Crea un hashtable donde se guarda el ranking
             std::unordered_map<std::string, int> tablaRespuestas;
@@ -104,6 +88,10 @@ class CompararFrase{
                 }
             }
 
+            ranking = TablaRespuestas;
+
+
+            //No sé al final si hace falta
             // Crear un vector de pares clave-valor para almacenar elementos del hashtable
             std::map<std::string, int, std::greater<>> tablaRespuestas;
 
@@ -117,5 +105,9 @@ class CompararFrase{
                 tablaRespuestas[clave] = numero;
             }
 
+        }
+
+        unordered_map<std::string, int> getRanking(){
+            return ranking;
         }
 };
