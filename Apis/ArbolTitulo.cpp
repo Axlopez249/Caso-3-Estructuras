@@ -2,20 +2,17 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include "ApiServer.cpp"
 #include <unordered_map>
-#include "PalabraLibro.h"
-#include "TemaLibro.h"
-#include "APISynonyms.cpp"
-#include "avl.cpp"
+#include "Avl.cpp"
 #include "Chatgpt.cpp"
+#include <map>
 
 namespace fs = std::filesystem;
 using namespace std;
 
 class ArbolTitulo{
     private:
-        unordered_map<std::string, int> ranking;
+        map<std::string, int> ranking;
 
     public:
         ArbolTitulo(vector<string> pfrase) {//pfrase es el vector de las palabras claves de la frase de busqueda
@@ -88,12 +85,11 @@ class ArbolTitulo{
                 }
             }
 
-            ranking = TablaRespuestas;
 
 
-            //No sé al final si hace falta
+            //Ranking ordenado
             // Crear un vector de pares clave-valor para almacenar elementos del hashtable
-            std::map<std::string, int, std::greater<>> tablaRespuestas;
+            std::map<std::string, int, std::greater<>> tablaRespuestasOrdenada;
 
             // Copiar los elementos del hashtable al vector
             for (const auto& pair : tablaRespuestas) {
@@ -107,7 +103,9 @@ class ArbolTitulo{
 
         }
 
-        unordered_map<std::string, int> getRanking(){
+        ranking = tablaRespuestasOrdenada
+
+        map<std::string, int> getRanking(){
             return ranking;
         }
 };

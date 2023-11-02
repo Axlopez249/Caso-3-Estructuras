@@ -31,7 +31,7 @@ int main() {
         
         ArbolTitulo arbol = new ArbolTitulo(clavesPalabras);
 
-        unordered_map<std::string, int> ranking = arbol.getRanking();
+        map<std::string, int> ranking = arbol.getRanking();
 
         // Convertir el mapa a un objeto JSON
         json jsonResponse = ranking;
