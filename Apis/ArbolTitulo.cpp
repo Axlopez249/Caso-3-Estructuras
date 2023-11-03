@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "Avl.cpp"
 #include "Chatgpt.cpp"
+#include "nodo.h"
 #include <map>
 
 namespace fs = std::filesystem;
@@ -18,7 +19,6 @@ class ArbolTitulo{
         ArbolTitulo(vector<string> pfrase) {//pfrase es el vector de las palabras claves de la frase de busqueda
             string folderPath = "Biblioteca"; // Reemplaza con la ruta de tu carpeta
             vector<string> fileNames;
-            vector<Libro> libros;
 
             try {
                 for (const auto& entry : fs::directory_iterator(folderPath)) {

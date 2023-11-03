@@ -2,9 +2,14 @@
 #define avl
 
 
+
 #include <iostream>
-#include <string>
+#include <vector>
+#include <algorithm>
+
 #include "nodo.h"
+
+using namespace std;
 
 class BinaryTree {
 private:
@@ -54,32 +59,32 @@ private:
         return altura(nodo->left) - altura(nodo->right);
     }
 
-    nodo* insert(nodo* nodo, const std::string& tema, const std::string& titulo) {
+    nodo* insert(nodo* nodo, const string& titulo, const vector<string>& temas) {
         if (nodo == nullptr) {
-            return new struct nodo(tema, titulo);
+            return new struct nodo(titulo, temas);
         }
 
-        if (tema < nodo->tema) {
-            nodo->left = insert(nodo->left, tema, titulo);
-        } else if (tema > nodo->tema) {
-            nodo->right = insert(nodo->right, tema, titulo);
+        if (titulo < nodo->bookTitle) {
+            nodo->left = insert(nodo->left, titulo, temas);
+        } else if (titulo > nodo->bookTitle) {
+            nodo->right = insert(nodo->right, titulo, temas);
         }
 
         nodo->altura = 1 + max(altura(nodo->left), altura(nodo->right));
 
         int balance = getBalance(nodo);
 
-        if (balance > 1 && tema < nodo->left->tema) {
+        if (balance > 1 && titulo < nodo->left->bookTitle) {
             return rotateRight(nodo);
         }
-        if (balance < -1 && tema > nodo->right->tema) {
+        if (balance < -1 && titulo > nodo->right->bookTitle) {
             return rotateLeft(nodo);
         }
-        if (balance > 1 && tema > nodo->left->tema) {
+        if (balance > 1 && titulo > nodo->left->bookTitle) {
             nodo->left = rotateLeft(nodo->left);
             return rotateRight(nodo);
         }
-        if (balance < -1 && tema < nodo->right->tema) {
+        if (balance < -1 && titulo < nodo->right->bookTitle) {
             nodo->right = rotateRight(nodo->right);
             return rotateLeft(nodo);
         }
@@ -90,35 +95,38 @@ private:
     void inOrderTraversal(nodo* nodo) {
         if (nodo != nullptr) {
             inOrderTraversal(nodo->left);
-            std::cout << "Tema: " << nodo->tema << ", Titulo: " << nodo->tituloLibro << "\n";
+            cout << "Titulo: " << nodo->bookTitle << "\n";
+            for (const string& tema : nodo->bookThemes) {
+                cout << "Tema: " << tema << "\n";
+            }
             inOrderTraversal(nodo->right);
         }
     }
 
-    nodo* buscar(nodo* nodo, const std::string& tema) {
-        if (nodo == nullptr || nodo->tema == tema) {
+    nodo* buscar(nodo* nodo, const string& titulo) {
+        if (nodo == nullptr || nodo->bookTitle == titulo) {
             return nodo;
         }
-        if (tema < nodo->tema) {
-            return buscar(nodo->left, tema);
+        if (titulo < nodo->bookTitle) {
+            return buscar(nodo->left, titulo);
         } else {
-            return buscar(nodo->right, tema);
+            return buscar(nodo->right, titulo);
         }
     }
 
 public:
     BinaryTree() : root(nullptr) {}
 
-    void insert(const std::string& tema, const std::string& titulo) {
-        root = insert(root, tema, titulo);
+    void insert(const string& titulo, const vector<string>& temas) {
+        root = insert(root, titulo, temas);
     }
 
     void traverseInOrder() {
         inOrderTraversal(root);
     }
 
-    nodo* search(const std::string& tema) {
-        return buscar(root, tema);
+    nodo* search(const string& titulo) {
+        return buscar(root, titulo);
     }
 };
-#endif
+#endifs

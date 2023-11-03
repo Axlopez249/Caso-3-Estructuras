@@ -4,7 +4,6 @@
 #include "httplib.h"
 #include "json.hpp"
 #include <curl/curl.h>
-#include "ExtraccionJson.cpp"
 #include "ArbolTitulo.cpp"
 #include "ChatGPT.cpp"
 #include <unordered_map>
