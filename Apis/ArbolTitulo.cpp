@@ -13,9 +13,12 @@ using namespace std;
 
 class ArbolTitulo{
     private:
-        map<std::string, int> ranking;
+        
 
     public:
+        
+        std::map<std::string, int, std::greater<>> ranking;
+
         ArbolTitulo(vector<string> pfrase) {//pfrase es el vector de las palabras claves de la frase de busqueda
             string folderPath = "Biblioteca"; // Reemplaza con la ruta de tu carpeta
             vector<string> fileNames;
@@ -35,8 +38,8 @@ class ArbolTitulo{
             for (const auto& fileName : fileNames) {
                 //ya tengo los titulos de los libros
                 string prompt = "Dame 5 temas relacionados a este libro: " + fileName;
-                Chatgpt chat = new Chatgpt(prompt);
-                vector<string> palabras = chat.getPalabras();
+                Chatgpt* chat = new Chatgpt(prompt);
+                vector<string> palabras = chat->getPalabras();
                 hashTableTemasLibro[fileName] = palabras;
 
             }
@@ -45,14 +48,14 @@ class ArbolTitulo{
             BinaryTree tree;
             
             //recorrer el hashtable e ir ingresando al arbol
-            for (const auto& element : mapa) {
+            for (const auto& element : hashTableTemasLibro) {
 
                 string key = element.first;//se saca la llave
                 vector<string> vectorHash = element.second;//se saca el vector
 
                 for (const auto& eleVector : vectorHash)
                 {
-                    tree.insert(tema, key);//en este caso key es el titulo del libro y tema es cada tema que hay acerca de ese libro
+                    tree.insert2(eleVector, key);//en este caso key es el titulo del libro y tema es cada tema que hay acerca de ese libro
                 }
                 
             }
@@ -69,17 +72,18 @@ class ArbolTitulo{
             {   
                 //Se busca la palabra en el arbol para ver si existe, si no existe una de las palabras en el arbol
                 //no sucede nada y el for sigue corriendo
-                nodo* resultado = tree.buscar(palabra);
+                nodo* resultado = tree.search(palabra);
                 if(resultado != nullptr)
                 {
                     //Revisa si la palabra se encuentra dentro de la tabla de hash, en caso de que sí, se le
                     //aumenta al valor de apariciones al libro en 1, en caso de que no exista se crea un
                     //nuevo elemento en el hash con el título del libro como key y 1 como value
-                    if(tablaRespuestas.find(resultado->bookTitle)) {
-                        tablaRespuestas[resultado->bookTitle]++;
+                    std::string tituloBuscado = resultado->tituloLibro;
+                    if(tablaRespuestas.count(tituloBuscado) == 1) {
+                        tablaRespuestas[resultado->tituloLibro]++;
                     } else 
                     {
-                        tablaRespuestas[resultado->bookTitle] = 1;
+                        tablaRespuestas[resultado->tituloLibro] = 1;
                     }
                     
                 }
@@ -99,13 +103,13 @@ class ArbolTitulo{
                 int numero = pair.second;
 
                 tablaRespuestas[clave] = numero;
+                }
+
+            ranking = tablaRespuestasOrdenada;
             }
-
-        }
-
-        ranking = tablaRespuestasOrdenada
-
+/*
         map<std::string, int> getRanking(){
             return ranking;
         }
+*/
 };

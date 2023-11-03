@@ -109,7 +109,7 @@ private:
 public:
     BinaryTree() : root(nullptr) {}
 
-    void insert(const std::string& tema, const std::string& titulo) {
+    void insert2(const std::string& tema, const std::string& titulo) {
         root = insert(root, tema, titulo);
     }
 

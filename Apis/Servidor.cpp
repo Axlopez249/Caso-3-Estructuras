@@ -5,7 +5,7 @@
 #include "json.hpp"
 #include <curl/curl.h>
 #include "ArbolTitulo.cpp"
-#include "ChatGPT.cpp"
+#include "Chatgpt.cpp"
 #include <unordered_map>
 
 using json = nlohmann::json;
@@ -28,9 +28,9 @@ int main() {
 
         vector<string> clavesSolicitud = chat.getPalabras(); 
         
-        ArbolTitulo arbol = new ArbolTitulo(clavesPalabras);
+        ArbolTitulo* arbol = new ArbolTitulo(clavesSolicitud);
 
-        map<std::string, int> ranking = arbol.getRanking();
+        std::map<std::string, int, std::greater<>> ranking = arbol->ranking;
 
         // Convertir el mapa a un objeto JSON
         json jsonResponse = ranking;

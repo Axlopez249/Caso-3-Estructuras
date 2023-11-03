@@ -11,7 +11,7 @@ WORKDIR /app
 COPY . /app
 
 # Compila tu aplicación junto con httplib y otras dependencias
-RUN g++ -o server server.cpp ArbolTitulo.cpp ChatGPT.cpp -lcurl
+RUN g++ -o server Servidor.cpp ArbolTitulo.cpp Chatgpt.cpp -lcurl
 
 # Expón el puerto en el que tu servidor escuchará (puerto 8080 en este caso)
 EXPOSE 8080
