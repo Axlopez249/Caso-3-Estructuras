@@ -9,6 +9,8 @@
 
 using namespace std;
 
+//Hacerlo generic
+
 struct nodo {
     string tema; // Tema del libro
     string tituloLibro; // TituloLibro

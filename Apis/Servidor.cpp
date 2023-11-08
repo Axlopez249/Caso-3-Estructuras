@@ -17,11 +17,15 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* out
     return total_size;
 }
 
+// docker run -it --rm -v C:\Users\PRINCIPAL\Desktop\caso3\Caso-3-Estructuras\Apis:/home -p 8080:8080 gcc bash
+
 int main() {
     httplib::Server svr;
 
     svr.Post("/process", [](const httplib::Request& req, httplib::Response& res) {
         std::string input_text = req.body;  // La frase de búsqueda proviene del cuerpo del mensaje HTTP
+
+        std::cout << input_text << std::endl;
 
         string prompt = "Quiero que tu respuesta sea solamente las palabras claves de esta frase: " + input_text + ". Sin texto extra por tu parte";
         Chatgpt chat(prompt);

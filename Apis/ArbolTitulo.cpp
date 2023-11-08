@@ -16,7 +16,7 @@ class ArbolTitulo{
         
 
     public:
-        
+
         std::map<std::string, int, std::greater<>> ranking;
 
         ArbolTitulo(vector<string> pfrase) {//pfrase es el vector de las palabras claves de la frase de busqueda
@@ -41,7 +41,6 @@ class ArbolTitulo{
                 Chatgpt* chat = new Chatgpt(prompt);
                 vector<string> palabras = chat->getPalabras();
                 hashTableTemasLibro[fileName] = palabras;
-
             }
 
             //llamo al arbol
@@ -50,18 +49,15 @@ class ArbolTitulo{
             //recorrer el hashtable e ir ingresando al arbol
             for (const auto& element : hashTableTemasLibro) {
 
-                string key = element.first;//se saca la llave
-                vector<string> vectorHash = element.second;//se saca el vector
+                string key = element.first;  //se saca la llave
+                vector<string> vectorHash = element.second;  //se saca el vector
 
                 for (const auto& eleVector : vectorHash)
                 {
-                    tree.insert2(eleVector, key);//en este caso key es el titulo del libro y tema es cada tema que hay acerca de ese libro
+                    tree.insert2(eleVector, key);  //en este caso key es el titulo del libro y tema es cada tema que hay acerca de ese libro
                 }
                 
             }
-
-
-
 
             //Crea un hashtable donde se guarda el ranking
             std::unordered_map<std::string, int> tablaRespuestas;
@@ -88,8 +84,6 @@ class ArbolTitulo{
                     
                 }
             }
-
-
 
             //Ranking ordenado
             // Crear un vector de pares clave-valor para almacenar elementos del hashtable
