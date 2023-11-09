@@ -18,3 +18,5 @@ struct nodo {
         : palabra(pPalabra), paginasApariciones(ppaginasApariciones), left(nullptr), right(nullptr), altura(pAltura), indice(pIndice) {
     }
 };
+
+#endif 

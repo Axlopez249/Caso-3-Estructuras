@@ -10,7 +10,7 @@ class AVLTree {
 private:
     nodo* root;
 
-    int altura(nodo* nodo) {
+    int getAltura(nodo* nodo) {
         if (nodo == nullptr) {
             return 0;
         }
@@ -28,8 +28,8 @@ private:
         x->right = y;
         y->left = T2;
 
-        y->altura = max(altura(y->left), altura(y->right)) + 1;
-        x->altura = max(altura(x->left), altura(x->right)) + 1;
+        y->altura = max(getAltura(y->left), getAltura(y->right)) + 1;
+        x->altura = max(getAltura(x->left), getAltura(x->right)) + 1;
 
         return x;
     }
@@ -41,8 +41,8 @@ private:
         y->left = x;
         x->right = T2;
 
-        x->altura = max(altura(x->left), altura(x->right)) + 1;
-        y->altura = max(altura(y->left), altura(y->right)) + 1;
+        x->altura = max(getAltura(x->left), getAltura(x->right)) + 1;
+        y->altura = max(getAltura(y->left), getAltura(y->right)) + 1;
 
         return y;
     }
@@ -51,7 +51,7 @@ private:
         if (nodo == nullptr) {
             return 0;
         }
-        return altura(nodo->left) - altura(nodo->right);
+        return getAltura(nodo->left) - getAltura(nodo->right);
     }
 
     nodo* insert(nodo* nodo, const std::string& palabra, const std::unordered_map<int, int>& paginasApariciones, int altura, int indice) {
@@ -71,7 +71,7 @@ private:
             }
         }
 
-        nodo->altura = 1 + max(altura(nodo->left), altura(nodo->right));
+        nodo->altura = 1 + max(getAltura(nodo->left), getAltura(nodo->right));
 
         int balance = getBalance(nodo);
 
@@ -127,5 +127,34 @@ public:
         return buscar(root, palabra);
     }
 };
+
+int main() {
+    AVLTree avlTree;
+
+    // Insertar palabras y sus páginas de aparición en el árbol AVL
+    std::unordered_map<int, int> paginas1 = {{1, 1}, {2, 2}, {3, 1}};
+    avlTree.insert("palabra1", paginas1, 3, 1);
+
+    std::unordered_map<int, int> paginas2 = {{2, 1}, {4, 2}, {5, 1}};
+    avlTree.insert("palabra2", paginas2, 3, 2);
+
+    std::unordered_map<int, int> paginas3 = {{1, 1}, {3, 1}, {6, 2}};
+    avlTree.insert("palabra3", paginas3, 3, 3);
+
+    // Realizar un recorrido en orden para ver las palabras en el árbol AVL
+    std::cout << "Recorrido en orden del árbol AVL:" << std::endl;
+    avlTree.traverseInOrder();
+
+    // Buscar una palabra en el árbol AVL
+    std::string palabraBuscada = "palabra2";
+    nodo* nodoEncontrado = avlTree.search(palabraBuscada);
+    if (nodoEncontrado != nullptr) {
+        std::cout << "Palabra encontrada: " << palabraBuscada << ", Índice: " << nodoEncontrado->indice << std::endl;
+    } else {
+        std::cout << "Palabra no encontrada: " << palabraBuscada << std::endl;
+    }
+
+    return 0;
+}
 
 #endif
