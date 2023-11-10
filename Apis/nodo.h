@@ -9,6 +9,7 @@
 struct nodo {
     std::string palabra;
     std::unordered_map<int, int> paginasApariciones;
+    std::vector<nodo*> nodosAsociados; // Vector de nodos asociados con la misma palabra
     nodo* left;
     nodo* right;
     int altura;

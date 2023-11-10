@@ -65,10 +65,8 @@ private:
             nodo->right = insert(nodo->right, palabra, paginasApariciones, altura, indice);
         } else {
             // La palabra ya existe en el árbol.
-            // Actualizamos el número de páginas de aparición.
-            for (const auto& entry : paginasApariciones) {
-                nodo->paginasApariciones[entry.first] += entry.second;
-            }
+            // Agregamos un nuevo nodo con la misma palabra a la lista de nodos asociados.
+            nodo->nodosAsociados.push_back(new struct nodo(palabra, paginasApariciones, altura, indice));
         }
 
         nodo->altura = 1 + max(getAltura(nodo->left), getAltura(nodo->right));
@@ -93,6 +91,7 @@ private:
         return nodo;
     }
 
+
     void inOrderTraversal(nodo* nodo) {
         if (nodo != nullptr) {
             inOrderTraversal(nodo->left);
@@ -112,6 +111,25 @@ private:
         }
     }
 
+    // Función auxiliar para buscar nodos asociados con la misma palabra en el árbol
+    nodo* buscarNodosAsociados(nodo* nodo, const std::string& palabra) {
+        if (nodo == nullptr) {
+            return nullptr;
+        }
+
+        // Comparamos la palabra con la palabra del nodo actual
+        if (palabra == nodo->palabra) {
+            // La palabra coincide, devolvemos el nodo actual
+            return nodo;
+        } else if (palabra < nodo->palabra) {
+            // La palabra buscada es menor, buscamos en el subárbol izquierdo
+            return buscarNodosAsociados(nodo->left, palabra);
+        } else {
+            // La palabra buscada es mayor, buscamos en el subárbol derecho
+            return buscarNodosAsociados(nodo->right, palabra);
+        }
+    }
+
 public:
     AVLTree() : root(nullptr) {}
 
@@ -124,32 +142,48 @@ public:
     }
 
     nodo* search(const std::string& palabra) {
-        return buscar(root, palabra);
+        // Buscamos en el árbol principal
+        nodo* nodoEncontrado = buscar(root, palabra);
+
+        // Si encontramos un nodo con la palabra, verificamos nodos asociados
+        if (nodoEncontrado != nullptr) {
+            nodo* nodoAsociado = buscarNodosAsociados(nodoEncontrado, palabra);
+            return (nodoAsociado != nullptr) ? nodoAsociado : nodoEncontrado;
+        }
+
+        return nullptr; // La palabra no se encontró en el árbol
     }
 };
 
 int main() {
-    AVLTree avlTree;
+    AVLTree tree;
 
-    // Insertar palabras y sus páginas de aparición en el árbol AVL
-    std::unordered_map<int, int> paginas1 = {{1, 1}, {2, 2}, {3, 1}};
-    avlTree.insert("palabra1", paginas1, 3, 1);
+    // Palabras repetidas
+    std::unordered_map<int, int> paginasApariciones1 = {{1, 1}, {2, 2}};
+    std::unordered_map<int, int> paginasApariciones2 = {{3, 1}, {4, 1}};
+    std::unordered_map<int, int> paginasApariciones3 = {{5, 1}, {6, 3}};
 
-    std::unordered_map<int, int> paginas2 = {{2, 1}, {4, 2}, {5, 1}};
-    avlTree.insert("palabra2", paginas2, 3, 2);
+    tree.insert("apple", paginasApariciones1, 1, 1);
+    tree.insert("banana", paginasApariciones2, 1, 2);
+    tree.insert("apple", paginasApariciones3, 1, 3);
 
-    std::unordered_map<int, int> paginas3 = {{1, 1}, {3, 1}, {6, 2}};
-    avlTree.insert("palabra3", paginas3, 3, 3);
+    // Realizar búsquedas
+    std::string palabraBuscada = "apple";
+    nodo* resultado = tree.search(palabraBuscada);
 
-    // Realizar un recorrido en orden para ver las palabras en el árbol AVL
-    std::cout << "Recorrido en orden del árbol AVL:" << std::endl;
-    avlTree.traverseInOrder();
+    if (resultado) {
+        std::cout << "Palabra encontrada: " << palabraBuscada << std::endl;
+        std::cout << "Páginas de aparición:" << std::endl;
 
-    // Buscar una palabra en el árbol AVL
-    std::string palabraBuscada = "palabra2";
-    nodo* nodoEncontrado = avlTree.search(palabraBuscada);
-    if (nodoEncontrado != nullptr) {
-        std::cout << "Palabra encontrada: " << palabraBuscada << ", Índice: " << nodoEncontrado->indice << std::endl;
+        for (const auto& entry : resultado->paginasApariciones) {
+            std::cout << "Página: " << entry.first << ", Apariciones: " << entry.second << std::endl;
+        }
+
+        // Mostrar nodos asociados
+        std::cout << "Nodos asociados con la misma palabra:" << std::endl;
+        for (const auto& nodoAsociado : resultado->nodosAsociados) {
+            std::cout << "Palabra: " << nodoAsociado->palabra << ", Índice: " << nodoAsociado->indice << std::endl;
+        }
     } else {
         std::cout << "Palabra no encontrada: " << palabraBuscada << std::endl;
     }

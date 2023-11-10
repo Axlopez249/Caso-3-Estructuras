@@ -1,53 +1,88 @@
-
 #include <iostream>
 #include <string>
-#include "httplib.h"
-#include "json.hpp"
-#include <curl/curl.h>
-#include "ArbolTitulo.cpp"
-#include "Chatgpt.cpp"
-#include <unordered_map>
+#include <cstring>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 
-using json = nlohmann::json;
-using namespace std;
-
-size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* output) {
-    size_t total_size = size * nmemb;
-    output->append(static_cast<char*>(contents), total_size);
-    return total_size;
-}
-
-// docker run -it --rm -v C:\Users\PRINCIPAL\Desktop\caso3\Caso-3-Estructuras\Apis:/home -p 8080:8080 gcc bash
+const int PORT = 8081;
 
 int main() {
-    httplib::Server svr;
+    int serverSocket, clientSocket;
+    struct sockaddr_in serverAddress, clientAddress;
+    socklen_t clientAddressLength = sizeof(clientAddress);
 
-    svr.Post("/process", [](const httplib::Request& req, httplib::Response& res) {
-        std::string input_text = req.body;  // La frase de búsqueda proviene del cuerpo del mensaje HTTP
+    // Crear un socket
+    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket < 0) {
+        perror("Error al crear el socket");
+        return 1;
+    }
 
-        std::cout << input_text << std::endl;
+    // Configurar la dirección del servidor
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
+    serverAddress.sin_port = htons(PORT);
 
-        string prompt = "Quiero que tu respuesta sea solamente las palabras claves de esta frase: " + input_text + ". Sin texto extra por tu parte";
-        Chatgpt chat(prompt);
+    // Enlazar el socket a la dirección y puerto
+    if (bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) {
+        perror("Error al enlazar el socket");
+        return 1;
+    }
 
-        vector<string> clavesSolicitud = chat.getPalabras(); 
-        
-        ArbolTitulo* arbol = new ArbolTitulo(clavesSolicitud);
+    // Escuchar conexiones entrantes
+    if (listen(serverSocket, 5) < 0) {
+        perror("Error al escuchar");
+        return 1;
+    }
 
-        std::map<std::string, int, std::greater<>> ranking = arbol->ranking;
+    std::cout << "Servidor HTTP escuchando en el puerto " << PORT << std::endl;
 
-        // Convertir el mapa a un objeto JSON
-        json jsonResponse = ranking;
+    while (true) {
+        // Aceptar una conexión entrante
+        clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddress, &clientAddressLength);
 
-        // Convertir el objeto JSON a una cadena
-        std::string responseBody = jsonResponse.dump();
+        if (clientSocket < 0) {
+            perror("Error al aceptar la conexión");
+            continue;
+        }
 
-        // Responder con el objeto JSON en el cuerpo de la respuesta HTTP
-        res.set_content(responseBody, "application/json");
-    });
+        char buffer[1024];
+        std::memset(buffer, 0, sizeof(buffer));
 
-    std::cout << "Servidor en ejecución en el puerto 8080" << std::endl;
-    svr.listen("localhost", 8080);
+        // Leer la solicitud HTTP del cliente
+        int bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesRead < 0) {
+            perror("Error al leer la solicitud HTTP");
+            close(clientSocket);
+            continue;
+        }
+
+        // Analizar la solicitud HTTP para encontrar el cuerpo
+        std::string request(buffer);
+        size_t bodyStart = request.find("\r\n\r\n");
+        if (bodyStart != std::string::npos) {
+            // Extraer el cuerpo de la solicitud
+            std::string requestBody = request.substr(bodyStart + 4);
+            
+            // Imprimir el cuerpo de la solicitud en la consola
+            std::cout << "Cuerpo de la solicitud: " << requestBody << std::endl;
+
+            // Responder con el cuerpo recibido
+            std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n" + requestBody;
+            send(clientSocket, response.c_str(), response.size(), 0);
+        } else {
+            // Si no se encuentra un cuerpo, responder con un mensaje de error
+            std::string response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nNo se encontró un cuerpo en la solicitud.";
+            send(clientSocket, response.c_str(), response.size(), 0);
+        }
+
+        // Cerrar la conexión con el cliente
+        close(clientSocket);
+    }
+
+    // Cerrar el socket del servidor
+    close(serverSocket);
 
     return 0;
 }
