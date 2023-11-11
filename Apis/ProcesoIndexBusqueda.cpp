@@ -50,7 +50,9 @@ class ProcesoIndexBusqueda{
                     string palabra = elementHash.first;
                     vector<int> vectorPaginas = elementHash.second;
                     unordered_map<int, int> hashInt = crearHash(vectorPaginas);
-                    int indice = hash.index();
+                    
+                    //Sacar indice del elemento
+                    int indice = std::distance(vectorHash.begin(), std::find(vectorHash.begin(), vectorHash.end(), hash));
                     //Datos para ingresarlos al nodo
 
                     //Se agrega al arbol
@@ -148,7 +150,7 @@ class ProcesoIndexBusqueda{
             for (string element : pfrase){
                 
                 std::unordered_map<int, std::unordered_map<int, int>> infoPalabra = busquedaAvl(element);//Tengo la info de la palabra (libro, paginas, comparaciones)
-                infoPalabrasPaginas[element] = inforPalabras;
+                infoPalabrasPaginas[element] = infoPalabra;
                 //Con esta
                 /*vector<int> vectorPalabra;
                 
@@ -169,14 +171,14 @@ class ProcesoIndexBusqueda{
             //Vamos revisando cada uno de ellos
             std::unordered_map<int, vector<paginaStruct>> hashPaginas;
 
-            for (const auto& elementRanking : rankingLibros) {
-                vector<paginaStruct> paginas;
+            for (const auto& elementRanking : rankingLibros) {//Cada elemento de este es el indice del libro
+                vector<paginaStruct> paginas;//Se crea un vector con esa estructura
 
-                for (const auto& palabraHash : infoPalabrasPaginas) {
-                    for (const auto& claveLibro : palabraHash.second) {
-                        int keyLibro = claveLibro.first;
+                for (const auto& palabraHash : infoPalabrasPaginas) { //Se recorre la informacion que se tenia anteriormente
+                    for (const auto& claveLibro : palabraHash.second) {//Se entra al hash que tiene los libros por palabra
+                        int keyLibro = claveLibro.first;//Llave del libro
 
-                        if (keyLibro == elementRanking.first) { // Comparar con elementRanking.first
+                        if (keyLibro == elementRanking.first) { // Comparar con elementRanking.first para obtener la informacion de ese libro
                             paginaStruct elementoStruct;
                             elementoStruct.palabra = palabraHash.first;
                             elementoStruct.hashPaginas = claveLibro.second;
@@ -191,7 +193,7 @@ class ProcesoIndexBusqueda{
 
             //Hasta este momento tengo un hash que contiene el indice del libro y las paginas intersecciones por libro 
             //tomando en cuenta todas las palabras en las que se encuentra
-            std::unordered_map<int, vector<int>> hashInterseccion = construirRankingPaginas(hashPaginas);
+            std::unordered_map<int, vector<int>> hashPaginasImportantes = construirRankingPaginas(hashPaginas); //el hash que guarda lo de esa funcion, guarda 3 paginas por cada libro
 
             //Ahora solo falta de alguna manera llamar a la funcion de busquedaBPlus para poder extraer el contenido de las pagina y sacar los parrafos que son
 
@@ -200,33 +202,23 @@ class ProcesoIndexBusqueda{
 
 
 
-        void busquedaBPlus(std::unordered_map<int, paginaInterseccion> hashInterseccion){
+        void busquedaBPlus(std::unordered_map<int, vector<int>> hashPaginasImportantes){
             //Se hace la busqueda tomando en cuenta el ranking
-            for (const auto& elementHash : hashInterseccion){
-                int libro = elementHash.first;
 
-                BPlusTree *arbolB = vectorArbolesB[libro];
-                //Aqui logro sacar el arbol del libro, luego procedo a extraer el vector de la 
-                //estructura para buscar las paginas y sacar el contenido
-
-                vector<int> vectorPaginas = elementHash.second;
-
-                //Tengo este vector de string que lo que tiene son los contenidos de las paginas
-                vector<string> conidoPaginas;
-                //Recorro el vector y voy buscando cada pagina y obteniendo su informacion
-                for (int pagina : vectorPaginas){
-                    string contenido = arbolB->search(pagina);
-                    contenido
-                }
+            
                 
-
-            }
             
         }
 
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
+
+        bool compararPorValor(const std::pair<int, int>& a, const std::pair<int, int>& b) {
+            return a.second > b.second; // Ordena de mayor a menor según el valor
+        }
         
+
+
         //Funcion para sacar la interseccion de las paginas
         std::unordered_map<int, vector<int>> construirRankingPaginas(const std::unordered_map<int, std::vector<PaginaStruct>>& hashPaginas) {
 
@@ -282,38 +274,38 @@ class ProcesoIndexBusqueda{
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
         std::unordered_map<int, int> construirRanking(std::unordered_map<std::string, std::unordered_map<int, std::unordered_map<int, int>>> palabras) {
-            std::unordered_map<int, int> interseccion;
+            std::unordered_map<int, int> ranking;
 
             if (palabras.empty()) {
-                return interseccion;  // No hay palabras para calcular intersección
-            }
-
-            // Itera sobre la primera palabra para inicializar la intersección
-            const auto& primerPalabra = palabras.begin()->second;
-            for (const auto& entry : primerPalabra) {
-                interseccion[entry.first] = entry.second;
+                return ranking;  // No hay palabras para calcular intersección
             }
 
             // Itera sobre el resto de las palabras
             for (const auto& palabra : palabras) {
                 const auto& libros = palabra.second;
 
-                for (const auto& entry : interseccion) {
+                for (const auto& entry : libros) {
                     int libroId = entry.first;
-
-                    auto iter = libros.find(libroId);
-                    if (iter != libros.end()) {
-                        // Actualiza la intersección utilizando el mínimo de apariciones
-                        interseccion[libroId] = std::min(iter->second, entry.second);
-                    } else {
-                        // Si no existe en alguna palabra, no puede formar parte de la intersección
-                        interseccion[libroId] = 0;
-                    }
+                    // Actualiza el ranking sumando las apariciones
+                    ranking[libroId] ++;
                 }
             }
 
-            return interseccion;
+            // Convertir el ranking a un vector de pares (clave, valor)
+            std::vector<std::pair<int, int>> vectorPares(ranking.begin(), ranking.end());
+
+            // Ordenar el vector de pares según los valores
+            std::sort(vectorPares.begin(), vectorPares.end(), compararPorValor);
+
+            std::unordered_map<int, int> rankingOrdenado;
+            for (const auto &par : vectorPares) {
+                    rankingOrdenado[par.first] = par.second;
+            }
+
+
+            return rankingOrdenado;
         }
+
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
