@@ -250,15 +250,15 @@ class ProcesoIndexBusqueda{
         //Funcion para sacar la interseccion de las paginas
         std::unordered_map<int, vector<int>> construirRankingPaginas(const std::unordered_map<int, std::vector<paginaStruct>>& hashPaginas) {
 
-            unordered_map<int, vector<int>> rankingPaginas;
+            unordered_map<int, vector<int>> rankingPaginasBueno;
 
             for(const auto &elementLibro : hashPaginas){
 
                 std::unordered_map<int, int> rankingPaginas;
 
                 // Llenar rankingPaginas
-                for (const auto &elementStruct : vectorStruct) {
-                    const std::unordered_map<int, int> &hashPaginas = elementStruct.hashPaginas;
+                for (const auto &elementStruct : elementLibro.second) {
+                    const std::unordered_map<int, int> &hashPaginas = elementStruct.paginasApariciones;
                     for (const auto &numPagina : hashPaginas) {
                         rankingPaginas[numPagina.first]++;
                     }
@@ -283,10 +283,10 @@ class ProcesoIndexBusqueda{
                     
                 }
 
-                rankingPaginas[hashPaginas.first] = paginas;
+                rankingPaginasBueno[elementLibro.first] = paginas;
 
             }
-            return rankingPaginas;
+            return rankingPaginasBueno;
 
             
 
