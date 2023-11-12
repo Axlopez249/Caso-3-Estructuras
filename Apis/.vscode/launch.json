@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/PRINCIPAL/Desktop/caso3/Caso-3-Estructuras/Apis",
-      "program": "c:/Users/PRINCIPAL/Desktop/caso3/Caso-3-Estructuras/Apis/build/Debug/outDebug",
+      "cwd": "c:/Users/PRINCIPAL/Desktop/caso3/NuevaCarpeta/Caso-3-Estructuras/Apis",
+      "program": "c:/Users/PRINCIPAL/Desktop/caso3/NuevaCarpeta/Caso-3-Estructuras/Apis/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

@@ -1,3 +1,6 @@
+#ifndef DICCHASHTABLES_
+#define DICCHASHTABLES_
+
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -115,7 +118,9 @@ class diccHashTables {
             return libros;
         }
 };
-
+/*
 int main() {
     diccHashTables diccionario;
 }
+*/
+#endif // DICCHASHTABLES_

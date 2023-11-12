@@ -142,6 +142,7 @@ std::string BPlusTree::search(int key) {
 
     // Devolver el valor correspondiente si se encuentra la clave
     if (index < currentNode->keys.size() && currentNode->keys[index] == key) {
+        std::cout << "Encontró" << std::endl;   //Esta línea está para ver si se encontró, será usado en las pruebas
         return currentNode->values[index];
     }
 
@@ -190,4 +191,5 @@ int main() {
     std::cout << "Buscando la página con clave 10: " << tree.search(10) << std::endl;
 
     return 0;
-}*/
+}
+*/

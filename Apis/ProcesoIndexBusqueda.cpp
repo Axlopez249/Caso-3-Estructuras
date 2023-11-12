@@ -1,16 +1,20 @@
+#ifndef PROCESOINDEXBUSQUEDA_
+#define PROCESOINDEXBUSQUEDA_
+
 #include <iostream>
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <unordered_map>
-#include "Avl.h"
+#include "Avl.cpp"
 #include "nodo.h"
 //#include "Chatgpt.cpp"
-#include "ExtractorPalabras.h"
+#include "ExtractorPalabras.cpp"
 #include "BPlusTree.h"
 #include <map>
 #include "paginaStruct.h"
-#include "paginaInterseccion.h"
+//#include "paginaInterseccion.h"
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -22,22 +26,21 @@ class ProcesoIndexBusqueda{
         vector<std::unordered_map<int, std::string>> vectorHashPaginas; //Vector de las paginas para ser metidas en el el b+
         std::unordered_map<int, int> rankingLibros; //Ranking de libros
 
-        vector<*BPlusTree> vectorArbolesB;
+        vector<BPlusTree*> vectorArbolesB;
         
         //Instancia de clases
         diccHashTables *extractorPalabras = new diccHashTables();//Para extraer las palabras
         AVLTree arbol; //arbol avl
     public:
 
-        ProcesoIndex() {//pfrase es el vector de las palabras claves de la frase de busqueda
-
-            
+        void ProcesoIndex() {    //pfrase es el vector de las palabras claves de la frase de busqueda
 
             vectorHash = extractorPalabras->getVectorHash();//Vector de hash
             libros = extractorPalabras->getLibros();
 
             //Ahora se hace uso de los objetos arboles para acomodar la informacion
-            arbol = new AVLTree();  
+            //arbol* = new AVLTree();  
+            AVLTree *arbol;
 
 
             //Primero recorro el vector que tenemos para poder ir ingresando los datos al arbol
@@ -77,7 +80,7 @@ class ProcesoIndexBusqueda{
                     
                     //Datos para ingresarlos al nodo
                     int numPagina = elementHash.first;
-                    String contenidoPagina = elementHash.second;
+                    string contenidoPagina = elementHash.second;
                     //Datos para ingresarlos al nodo
 
                     //Se agrega al arbol
@@ -91,7 +94,10 @@ class ProcesoIndexBusqueda{
 
             //Hasta el momento todo esta en arboles
             //Ahora para asegurar que todo esta guardado bien se inicializan las otras funciones despues del almacenamiento
-            searchPrincipal();
+
+            vector<string> frasePrueba = {"laughing", "girl", "into", "helpless", "cripple"};
+
+            searchPrincipal(frasePrueba);
             
         }
 
@@ -181,7 +187,7 @@ class ProcesoIndexBusqueda{
                         if (keyLibro == elementRanking.first) { // Comparar con elementRanking.first para obtener la informacion de ese libro
                             paginaStruct elementoStruct;
                             elementoStruct.palabra = palabraHash.first;
-                            elementoStruct.hashPaginas = claveLibro.second;
+                            elementoStruct.paginasApariciones = claveLibro.second;
                             paginas.push_back(elementoStruct);
                         }
                     }
@@ -194,6 +200,29 @@ class ProcesoIndexBusqueda{
             //Hasta este momento tengo un hash que contiene el indice del libro y las paginas intersecciones por libro 
             //tomando en cuenta todas las palabras en las que se encuentra
             std::unordered_map<int, vector<int>> hashPaginasImportantes = construirRankingPaginas(hashPaginas); //el hash que guarda lo de esa funcion, guarda 3 paginas por cada libro
+
+            //De aquí para abajo estará mi lógica, este comentario lo anoto por si es necesario borrar mi lógica debido a que es incorrecta
+
+                // Recorre el unordered_map
+            for (const auto& hash : hashPaginasImportantes) {
+                int indiceLibro = hash.first;
+                const std::vector<int>& paginas = hash.second;
+
+                BPlusTree *arbolActual = vectorArbolesB.at(indiceLibro);
+
+                // Imprime el índice del libro
+                std::cout << "Libro #" << indiceLibro << ": ";
+
+                for(int pagina : paginas) {
+                    arbolActual->search(pagina);
+                }
+
+                // Salto de línea después de imprimir todas las páginas del libro actual
+                std::cout << std::endl;
+            }
+            
+
+
 
             //Ahora solo falta de alguna manera llamar a la funcion de busquedaBPlus para poder extraer el contenido de las pagina y sacar los parrafos que son
 
@@ -213,20 +242,17 @@ class ProcesoIndexBusqueda{
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
-        bool compararPorValor(const std::pair<int, int>& a, const std::pair<int, int>& b) {
+        static bool compararPorValor(const std::pair<int, int>& a, const std::pair<int, int>& b) {
             return a.second > b.second; // Ordena de mayor a menor según el valor
         }
-        
 
 
         //Funcion para sacar la interseccion de las paginas
-        std::unordered_map<int, vector<int>> construirRankingPaginas(const std::unordered_map<int, std::vector<PaginaStruct>>& hashPaginas) {
+        std::unordered_map<int, vector<int>> construirRankingPaginas(const std::unordered_map<int, std::vector<paginaStruct>>& hashPaginas) {
 
             unordered_map<int, vector<int>> rankingPaginas;
 
             for(const auto &elementLibro : hashPaginas){
-
-                
 
                 std::unordered_map<int, int> rankingPaginas;
 
@@ -242,7 +268,7 @@ class ProcesoIndexBusqueda{
                 std::vector<std::pair<int, int>> vectorPares(rankingPaginas.begin(), rankingPaginas.end());
 
                 // Ordenar el vector de pares según los valores
-                std::sort(vectorPares.begin(), vectorPares.end(), compararPorValor);
+                std::sort(vectorPares.begin(), vectorPares.end(), &ProcesoIndexBusqueda::compararPorValor);
 
                 // Crear un unordered_map ordenado según los valores
                 std::unordered_map<int, int> rankingOrdenado;
@@ -361,3 +387,6 @@ class ProcesoIndexBusqueda{
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
 };
+
+
+#endif // PROCESOINDEXBUSQUEDA_
