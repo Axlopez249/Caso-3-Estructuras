@@ -85,7 +85,7 @@ public:
                 std::cout << "Cuerpo de la solicitud: " << responseBody << std::endl;
 
                 // Responder con el cuerpo recibido
-                std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n" + requestBody;
+                std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n" + responseBody;
                 send(clientSocket, response.c_str(), response.size(), 0);
             } else {
                 // Si no se encuentra un cuerpo, responder con un mensaje de error
@@ -120,6 +120,8 @@ private:
 
         // Convertir el objeto JSON a una cadena
         std::string cuerpoRespuesta = cuerpoJSON.dump();
+
+        std::cout << cuerpoRespuesta << std::endl;
 
         return cuerpoRespuesta;
     }
