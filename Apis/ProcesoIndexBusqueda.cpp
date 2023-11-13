@@ -85,7 +85,7 @@ class ProcesoIndexBusqueda{
             //Se crean 30 arboles - uno para cada libro
             //En el mismo orden del vector de los nombres del libro
 
-            int indiceAfuera = 0;
+//            int indiceAfuera = 0;
             std::cout << "HAHA2" << std::endl;
             for (const auto& hash : vectorHashPaginas) {
 
@@ -100,7 +100,7 @@ class ProcesoIndexBusqueda{
                 //For para poder recorrer cada hash
                 //Dentro van a haber la clave (la palabra y su vector)
 
-                int indiceAdentro = 0;
+//                int indiceAdentro = 0;
 
                 for (const auto& elementHash : hash) {
 
@@ -114,7 +114,7 @@ class ProcesoIndexBusqueda{
                     //Datos para ingresarlos al nodo
                     std::cout << "Antes de agregado" << std::endl;
                     std::cout << numPagina << std::endl;
-                    std::cout << contenidoPagina << std::endl;
+//                    std::cout << contenidoPagina << std::endl;
                     //Se agrega al arbol
                     arbolB->insert(numPagina, contenidoPagina);
                     std::cout << "Después de agregado" << std::endl;

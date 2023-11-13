@@ -51,29 +51,57 @@ void BPlusTree::insertInLeaf(BPlusNode* node, int key, const std::string& value)
     node->values.insert(node->values.begin() + index, value);
 }
 
+
 void BPlusTree::splitInternalNode(BPlusNode* parent, int index, BPlusNode* child) {
-    // Crear un nuevo nodo interno y mover las claves y los hijos apropiados
+    // Crear un nuevo nodo interno
     BPlusNode* newNode = new BPlusNode(false);
 
-    // Mover las claves a newNode
-    newNode->keys.insert(newNode->keys.begin(), child->keys.begin() + ORDER / 2, child->keys.end());
-    child->keys.erase(child->keys.begin() + ORDER / 2, child->keys.end());
+    // Mover las claves y los hijos a newNode
+    int midIndex = (ORDER - 1) / 2;
+    newNode->keys = std::vector<int>(child->keys.begin() + midIndex + 1, child->keys.end());
+    newNode->children = std::vector<BPlusNode*>(child->children.begin() + midIndex + 1, child->children.end());
 
-    // Mover los hijos a newNode
-    newNode->children.insert(newNode->children.begin(), child->children.begin() + ORDER / 2, child->children.end());
-    child->children.erase(child->children.begin() + ORDER / 2, child->children.end());
+    // Eliminar las claves y los hijos movidos de child
+    child->keys.erase(child->keys.begin() + midIndex, child->keys.end());
+    child->children.erase(child->children.begin() + midIndex + 1, child->children.end());
 
-    // Insertar el valor medio en el nodo padre
-    parent->keys.insert(parent->keys.begin() + index, newNode->keys[0]);
+    // Insertar la clave del medio en el nodo padre
+    parent->keys.insert(parent->keys.begin() + index, child->keys.back());
+    child->keys.pop_back();
+
+    // Insertar el nuevo nodo interno en el nodo padre
     parent->children.insert(parent->children.begin() + index + 1, newNode);
 
-    // Actualizar las claves en el nodo hijo
-    newNode->keys.erase(newNode->keys.begin());
+    // Verificar si el nodo interno padre también necesita dividirse
+    if (parent->keys.size() >= ORDER) {
+        int parentMidIndex = (ORDER - 1) / 2;
+        BPlusNode* newParent = new BPlusNode(false);
+        newParent->keys = std::vector<int>(parent->keys.begin() + parentMidIndex + 1, parent->keys.end());
+        newParent->children = std::vector<BPlusNode*>(parent->children.begin() + parentMidIndex + 1, parent->children.end());
+        parent->keys.erase(parent->keys.begin() + parentMidIndex, parent->keys.end());
+        parent->children.erase(parent->children.begin() + parentMidIndex + 1, parent->children.end());
+
+        // Insertar la clave del medio del nodo interno padre en el nodo abuelo
+        if (parent->next != nullptr) {
+            parent->next->keys.insert(parent->next->keys.begin(), parent->keys.back());
+            parent->next->children.insert(parent->next->children.begin(), newParent);
+        } else {
+            BPlusNode* newRoot = new BPlusNode(false);
+            newRoot->keys.push_back(parent->keys.back());
+            newRoot->children.push_back(parent);
+            newRoot->children.push_back(newParent);
+            root = newRoot;
+        }
+
+        parent->keys.pop_back();
+    }
 }
+
 
 
 void BPlusTree::insert(int key, const std::string& value) {
     // Caso base: el árbol está vacío
+    std::cout << "Dentro de BTree" << std::endl;
     if (root == nullptr) {
         root = new BPlusNode(true);
         root->keys.push_back(key);
@@ -93,6 +121,7 @@ void BPlusTree::insert(int key, const std::string& value) {
         currentNode = currentNode->children.at(index);
     }
 
+    std::cout << "Dentro de BTree" << std::endl;
     // Insertar en el nodo hoja
     insertInLeaf(currentNode, key, value);
 
@@ -103,28 +132,34 @@ void BPlusTree::insert(int key, const std::string& value) {
         newNode->next = currentNode->next;
         currentNode->next = newNode;
 
+        std::cout << "Dentro de BTree" << std::endl;
         newNode->keys.insert(newNode->keys.begin(), currentNode->keys.begin() + ORDER / 2, currentNode->keys.end());
         newNode->values.insert(newNode->values.begin(), currentNode->values.begin() + ORDER / 2, currentNode->values.end());
 
         currentNode->keys.erase(currentNode->keys.begin() + ORDER / 2, currentNode->keys.end());
         currentNode->values.erase(currentNode->values.begin() + ORDER / 2, currentNode->values.end());
 
+        std::cout << "Dentro de BTree" << std::endl;
         // Insertar la clave mínima del nuevo nodo hoja en el nodo padre
         if (parent == nullptr) {
+            std::cout << "Parent == nullptr" << std::endl;
             // Si el nodo hoja es la raíz, crear un nuevo nodo interno como raíz
             root = new BPlusNode(false);
             root->keys.push_back(newNode->keys.at(0));
             root->children.push_back(currentNode);
             root->children.push_back(newNode);
         } else {
+            std::cout << "Else parent" << std::endl;
             // Insertar en el nodo interno padre
             index = std::lower_bound(parent->keys.begin(), parent->keys.end(), newNode->keys.at(0)) - parent->keys.begin();
             parent->keys.insert(parent->keys.begin() + index, newNode->keys[0]);
             parent->children.insert(parent->children.begin() + index + 1, newNode);
 
+            std::cout << "Dentro de BTree" << std::endl;
             // Revisar si el nodo interno se desbordó
             if (parent->keys.size() >= ORDER) {
                 // Dividir el nodo interno
+                std::cout << "Viene split" << std::endl;
                 splitInternalNode(parent, index, newNode);
             }
         }
