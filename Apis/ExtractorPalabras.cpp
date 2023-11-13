@@ -79,7 +79,8 @@ class diccHashTables {
                             palabraCount = 0;
                             //std::cout << palabra.length() << std::endl;
                             pagina++;
-                            paginaActual.clear();
+                            paginaActual = "";
+//                            paginaActual.clear();
                         }                        
                     }
                 }

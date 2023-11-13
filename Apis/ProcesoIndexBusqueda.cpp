@@ -26,11 +26,13 @@ class ProcesoIndexBusqueda{
         vector<std::unordered_map<int, std::string>> vectorHashPaginas; //Vector de las paginas para ser metidas en el el b+
         std::unordered_map<int, int> rankingLibros; //Ranking de libros
 
+        AVLTree *arbol;
+
         vector<BPlusTree*> vectorArbolesB;
         
         //Instancia de clases
         diccHashTables *extractorPalabras = new diccHashTables();//Para extraer las palabras
-        AVLTree arbol; //arbol avl
+//        AVLTree arbol; //arbol avl
     public:
 
         void ProcesoIndex() {    //pfrase es el vector de las palabras claves de la frase de busqueda
@@ -40,7 +42,7 @@ class ProcesoIndexBusqueda{
 
             //Ahora se hace uso de los objetos arboles para acomodar la informacion
             //arbol* = new AVLTree();  
-            AVLTree *arbol;
+            
 
             arbol = new AVLTree();
 
@@ -112,12 +114,12 @@ class ProcesoIndexBusqueda{
                     int numPagina = elementHash.first;
                     string contenidoPagina = elementHash.second;
                     //Datos para ingresarlos al nodo
-                    std::cout << "Antes de agregado" << std::endl;
-                    std::cout << numPagina << std::endl;
+//                    std::cout << "Antes de agregado" << std::endl;
+//                    std::cout << numPagina << std::endl;
 //                    std::cout << contenidoPagina << std::endl;
                     //Se agrega al arbol
                     arbolB->insert(numPagina, contenidoPagina);
-                    std::cout << "Después de agregado" << std::endl;
+//                    std::cout << "Después de agregado" << std::endl;
                     
                 }
                 std::cout << "HAHA2" << std::endl;
@@ -125,11 +127,10 @@ class ProcesoIndexBusqueda{
                 vectorArbolesB.push_back(arbolB);
             }
 
-
             //Hasta el momento todo esta en arboles
             //Ahora para asegurar que todo esta guardado bien se inicializan las otras funciones despues del almacenamiento
 
-            vector<string> frasePrueba = {"People", "village", "forgotten", "helplethatss", "there"};
+            vector<string> frasePrueba = {"stress", "feeling", "Mandy", "Loomis", "voice", "higher"};
 
             searchPrincipal(frasePrueba);
             
@@ -142,7 +143,7 @@ class ProcesoIndexBusqueda{
         //Esta funcion es para obtener los libros, sus paginas y sus cantidades de repeticiones
         std::unordered_map<int, unordered_map<int, int>> busquedaAvl(string palabraBuscada){
             
-            nodo* resultado = arbol.search(palabraBuscada);
+            nodo* resultado = arbol->search(palabraBuscada);
 
             std::unordered_map<int, unordered_map<int, int>> hashRetorno;
 
@@ -234,6 +235,13 @@ class ProcesoIndexBusqueda{
 
             //Hasta este momento tengo un hash que contiene el indice del libro y las paginas intersecciones por libro 
             //tomando en cuenta todas las palabras en las que se encuentra
+/*
+            BPlusTree *arbolTest = vectorArbolesB.back();
+
+            string test = arbolTest->search(4);
+
+            std::cout << test << std::endl;
+*/
             std::unordered_map<int, vector<int>> hashPaginasImportantes = construirRankingPaginas(hashPaginas); //el hash que guarda lo de esa funcion, guarda 3 paginas por cada libro
 
             //De aquí para abajo estará mi lógica, este comentario lo anoto por si es necesario borrar mi lógica debido a que es incorrecta
