@@ -15,6 +15,7 @@
 #include "BPlusTree.h"
 #include <map>
 #include "paginaStruct.h"
+#include "fragmentoStruct.h"
 //#include "paginaInterseccion.h"
 
 namespace fs = std::filesystem;
@@ -27,7 +28,7 @@ class ProcesoIndexBusqueda{
         vector<string> frase;
         vector<std::unordered_map<int, std::string>> vectorHashPaginas; //Vector de las paginas para ser metidas en el el b+
         std::vector<std::pair<int, int>> rankingLibros; //Ranking de libros
-        std::unordered_map <int, vector<string>> impresionFinal;
+        std::unordered_map <int, vector<fragmentoStruct>> impresionFinal;
 
         AVLTree *arbol;
 
@@ -229,8 +230,19 @@ class ProcesoIndexBusqueda{
             std::unordered_map<int, vector<int>> hashPaginasImportantes = construirRankingPaginas(hashPaginas); //el hash que guarda lo de esa funcion, guarda 3 paginas por cada libro
 
             //De aquí para abajo estará mi lógica, este comentario lo anoto por si es necesario borrar mi lógica debido a que es incorrecta
-            std::cout << "Marca" << std::endl;
+            std::cout << "Marca2-Prueba" << std::endl;
             impresionFinal = busquedaBPlus(hashPaginasImportantes);
+
+            for (const auto &impresion : impresionFinal)
+            {
+                cout << "libro: " << impresion.first << endl;
+                for (const auto &contenido : impresion.second)
+                {
+                    cout << contenido << endl;
+                }
+                
+            }
+            
 
             
 
@@ -239,9 +251,9 @@ class ProcesoIndexBusqueda{
         }
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
-        std::unordered_map <int, vector<string>> busquedaBPlus(std::unordered_map<int, vector<int>> hashPaginasImportantes){
+        std::unordered_map <int, vector<fragmentoStruct>> busquedaBPlus(std::unordered_map<int, vector<int>> hashPaginasImportantes){
             //Se hace la busqueda tomando en cuenta el ranking
-            std::unordered_map <int, vector<string>> pimpresionFinal;
+            std::unordered_map <int, vector<fragmentoStruct>> pimpresionFinal;
 
             for (const auto &libro : hashPaginasImportantes){
 
@@ -252,17 +264,20 @@ class ProcesoIndexBusqueda{
 
                 // Imprime el índice del libro
                 //std::cout << "Libro #" << indiceLibro << ": ";
-                vector<string> fragmentos;
+                vector<fragmentoStruct> fragmentos;
                 for(int pagina : paginas) {
                     //std::cout << pagina << std::endl;
-                    string contenido = arbolActual->search(pagina);
-                    string fragmento = obtenerFragmento(contenido);
+                    string contenidoParrafo = arbolActual->search(pagina);
+                    //string fragmento = obtenerFragmento(contenido);
+                    fragmentoStruct fragmento;
+                    fragmento.contenido = contenidoParrafo;
+                    fragmento.numPagina = pagina;
                     fragmentos.push_back(fragmento);
                     //Ahora tengo que descomponer la pagina
                 }
                 pimpresionFinal[idLibro] = fragmentos;
             }
-
+            /*
             std::cout << "Recorriendo el unordered_map:2" << std::endl;
             for (const auto& entrada : impresionFinal) {
                 int clave = entrada.first;
@@ -277,14 +292,14 @@ class ProcesoIndexBusqueda{
                 }
 
                 std::cout << std::endl;
-            }
+            }*/
 
             return pimpresionFinal;
 
         }
 
 
-
+        /*
         std::string obtenerFragmento(const std::string& texto) {
             std::istringstream iss(texto);
             std::vector<std::string> palabras_texto{
@@ -326,7 +341,7 @@ class ProcesoIndexBusqueda{
             }
 
             return fragmento.str();
-        }
+        }*/
 
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -488,7 +503,7 @@ class ProcesoIndexBusqueda{
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
-        std::unordered_map <int, vector<string>> getImpresionFinal(){
+        std::unordered_map <int, vector<fragmentoStruct>> getImpresionFinal(){
             return impresionFinal;
         }
 };

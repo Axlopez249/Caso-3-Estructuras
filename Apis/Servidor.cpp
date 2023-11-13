@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "Archivos/Chatgpt.cpp"
 #include "ProcesoIndexBusqueda.cpp"
+#include "fragmentoStruct.h"
 
 const int PORT = 8081;
 
@@ -84,8 +85,8 @@ public:
                 // Inicializo el indexador y el buscador
                 ProcesoIndexBusqueda *proceso = new ProcesoIndexBusqueda();
                 proceso->ProcesoIndex(palabras);
-                std::unordered_map <int, std::vector<std::string>> impresionFinal = proceso->getImpresionFinal();
-
+                std::unordered_map <int, std::vector<fragmentoStruct>> impresionFinal = proceso->getImpresionFinal();
+                /*
                 std::cout << "Recorriendo el unordered_map:" << std::endl;
                 for (const auto& entrada : impresionFinal) {
                     int clave = entrada.first;
@@ -100,7 +101,7 @@ public:
                     }
 
                     std::cout << std::endl;
-                }
+                }*/
 
                 std::string responseBody = construirCuerpoRespuesta(impresionFinal);
 
@@ -129,16 +130,26 @@ private:
         // Constructor privado
     }
 
-    std::string construirCuerpoRespuesta(const std::unordered_map<int, std::vector<std::string>>& impresionFinal) {
+    std::string construirCuerpoRespuesta(const std::unordered_map<int, std::vector<fragmentoStruct>>& impresionFinal) {
         // Construir el objeto JSON
         json cuerpoJSON;
 
         for (const auto& entrada : impresionFinal) {
             int clave = entrada.first;
-            const std::vector<std::string>& valores = entrada.second;
+            const std::vector<fragmentoStruct>& valores = entrada.second;
+
+            // Crear un arreglo JSON para los fragmentos asociados a la clave
+            json fragmentosJSON;
+            for (const auto& fragmento : valores) {
+                json fragmentoJSON = {
+                    {"contenido", fragmento.contenido},
+                    {"numero_pagina", fragmento.numeroPagina}
+                };
+                fragmentosJSON.push_back(fragmentoJSON);
+            }
 
             // Añadir una entrada al objeto JSON
-            cuerpoJSON[std::to_string(clave)] = valores;
+            cuerpoJSON[std::to_string(clave)] = fragmentosJSON;
         }
 
         // Convertir el objeto JSON a una cadena

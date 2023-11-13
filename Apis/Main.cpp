@@ -44,8 +44,9 @@ int main() {
 */
     // Crear una instancia de la clase ProcesoIndexBusqueda
     std::cout << "HAHA" << std::endl;
+    vector<string> frasePrueba = {"stress", "feeling", "Mandy", "Loomis", "voice", "higher"};
     ProcesoIndexBusqueda *procesoIndex2 = new ProcesoIndexBusqueda();
-    procesoIndex2->ProcesoIndex();
+    procesoIndex2->ProcesoIndex(frasePrueba);
 
     // Aquí puedes realizar pruebas adicionales o llamadas a funciones de ProcesoIndexBusqueda
 
