@@ -54,10 +54,14 @@ void BPlusTree::insertInLeaf(BPlusNode* node, int key, const std::string& value)
 void BPlusTree::splitInternalNode(BPlusNode* parent, int index, BPlusNode* child) {
     // Crear un nuevo nodo interno y mover las claves y los hijos apropiados
     BPlusNode* newNode = new BPlusNode(false);
-    newNode->children.insert(newNode->children.begin(), child->children.begin() + ORDER / 2, child->children.end());
-    child->children.erase(child->children.begin() + ORDER / 2, child->children.end());
+
+    // Mover las claves a newNode
     newNode->keys.insert(newNode->keys.begin(), child->keys.begin() + ORDER / 2, child->keys.end());
     child->keys.erase(child->keys.begin() + ORDER / 2, child->keys.end());
+
+    // Mover los hijos a newNode
+    newNode->children.insert(newNode->children.begin(), child->children.begin() + ORDER / 2, child->children.end());
+    child->children.erase(child->children.begin() + ORDER / 2, child->children.end());
 
     // Insertar el valor medio en el nodo padre
     parent->keys.insert(parent->keys.begin() + index, newNode->keys[0]);
@@ -66,6 +70,7 @@ void BPlusTree::splitInternalNode(BPlusNode* parent, int index, BPlusNode* child
     // Actualizar las claves en el nodo hijo
     newNode->keys.erase(newNode->keys.begin());
 }
+
 
 void BPlusTree::insert(int key, const std::string& value) {
     // Caso base: el árbol está vacío
@@ -85,7 +90,7 @@ void BPlusTree::insert(int key, const std::string& value) {
         parent = currentNode;
         auto it = std::upper_bound(currentNode->keys.begin(), currentNode->keys.end(), key);
         index = it - currentNode->keys.begin();
-        currentNode = currentNode->children[index];
+        currentNode = currentNode->children.at(index);
     }
 
     // Insertar en el nodo hoja
@@ -108,12 +113,12 @@ void BPlusTree::insert(int key, const std::string& value) {
         if (parent == nullptr) {
             // Si el nodo hoja es la raíz, crear un nuevo nodo interno como raíz
             root = new BPlusNode(false);
-            root->keys.push_back(newNode->keys[0]);
+            root->keys.push_back(newNode->keys.at(0));
             root->children.push_back(currentNode);
             root->children.push_back(newNode);
         } else {
             // Insertar en el nodo interno padre
-            index = std::lower_bound(parent->keys.begin(), parent->keys.end(), newNode->keys[0]) - parent->keys.begin();
+            index = std::lower_bound(parent->keys.begin(), parent->keys.end(), newNode->keys.at(0)) - parent->keys.begin();
             parent->keys.insert(parent->keys.begin() + index, newNode->keys[0]);
             parent->children.insert(parent->children.begin() + index + 1, newNode);
 
@@ -133,7 +138,7 @@ std::string BPlusTree::search(int key) {
     while (!currentNode->isLeaf) {
         auto it = std::upper_bound(currentNode->keys.begin(), currentNode->keys.end(), key);
         int index = it - currentNode->keys.begin();
-        currentNode = currentNode->children[index];
+        currentNode = currentNode->children.at(index);
     }
 
     // Buscar la clave en el nodo hoja
@@ -141,9 +146,9 @@ std::string BPlusTree::search(int key) {
     int index = it - currentNode->keys.begin();
 
     // Devolver el valor correspondiente si se encuentra la clave
-    if (index < currentNode->keys.size() && currentNode->keys[index] == key) {
+    if (index < currentNode->keys.size() && currentNode->keys.at(index) == key) {
         std::cout << "Encontró" << std::endl;   //Esta línea está para ver si se encontró, será usado en las pruebas
-        return currentNode->values[index];
+        return currentNode->values.at(index);
     }
 
     // Devolver una cadena vacía si la clave no se encuentra
@@ -157,20 +162,20 @@ void BPlusTree::printTree(BPlusNode* node, int indent) {
 
     if (node->isLeaf) {
         for (int i = 0; i < node->keys.size(); ++i) {
-            std::cout << node->keys[i] << ": " << node->values[i] << " | ";
+            std::cout << node->keys.at(i) << ": " << node->values.at(i) << " | ";
         }
         std::cout << " -> ";
         if (node->next != nullptr) {
-            std::cout << node->next->keys[0];
+            std::cout << node->next->keys.at(0);
         }
         std::cout << std::endl;
     } else {
         for (int i = 0; i < node->keys.size(); ++i) {
-            std::cout << node->keys[i] << " ";
+            std::cout << node->keys.at(i) << " ";
         }
         std::cout << std::endl;
         for (int i = 0; i < node->children.size(); ++i) {
-            printTree(node->children[i], indent + 4);
+            printTree(node->children.at(i), indent + 4);
         }
     }
 };

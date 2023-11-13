@@ -12,7 +12,7 @@ int main() {
     auto vectorHash = diccionario.getVectorHash();
     auto vectorHashPaginas = diccionario.getVectorHashPaginas();
     auto libros = diccionario.getLibros();
-
+/*
     // Imprimir información de las hashtables y los libros
     std::cout << "Información de hashtables:" << std::endl;
     for (size_t i = 0; i < vectorHash.size(); ++i) {
@@ -26,7 +26,8 @@ int main() {
         }
         std::cout << std::endl;
     }
-
+*/
+/*
     std::cout << "Información de páginas:" << std::endl;
     for (size_t i = 0; i < vectorHashPaginas.size(); ++i) {
         std::cout << "Libro #" << i << ":" << std::endl;
@@ -40,9 +41,11 @@ int main() {
     for (const auto& libro : libros) {
         std::cout << libro << std::endl;
     }
-
+*/
     // Crear una instancia de la clase ProcesoIndexBusqueda
-    ProcesoIndexBusqueda procesoIndex;
+    std::cout << "HAHA" << std::endl;
+    ProcesoIndexBusqueda *procesoIndex2 = new ProcesoIndexBusqueda();
+    procesoIndex2->ProcesoIndex();
 
     // Aquí puedes realizar pruebas adicionales o llamadas a funciones de ProcesoIndexBusqueda
 
