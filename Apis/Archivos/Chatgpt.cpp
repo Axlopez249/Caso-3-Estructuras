@@ -39,9 +39,11 @@ class Chatgpt{
 
                 // Dividir la respuesta en palabras y almacenarlas en el vector
                 istringstream iss(respuestaAsistente);
+                std::cout << promptv << std::endl;
                 palabras.assign(istream_iterator<string>(iss), istream_iterator<string>());
             } else {
                 // Si no hay contenido en la respuesta del asistente, el vector de palabras se deja vacío
+                std::cout << "2" << std::endl;
                 palabras.clear();
             }
         }
@@ -58,7 +60,7 @@ class Chatgpt{
             std::string prompt = "Usuario:"+ promptv +"\nAsistente: Mi nombre es GPT-3.5. ¿En qué puedo ayudarte hoy?";
 
             // Configura la clave de API
-            std::string api_key = "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";
+            std::string api_key = "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";
 
             // Inicializa libcurl
             curl_global_init(CURL_GLOBAL_DEFAULT);

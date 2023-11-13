@@ -73,11 +73,34 @@ public:
                 //Estoy llamando a chatgpt para poder extraer la frase en palabras
                 std::string prompt = "Podrias darme solamente las palabras claves de esta frase: " + requestBody;
                 Chatgpt* prueba = new Chatgpt(prompt);
+//                std::cout << prompt << std::endl;
                 std::vector<std::string> palabras = prueba->getPalabras();
+
+                std::cout << "Palabras clave extraídas:" << std::endl;
+                for (const auto& palabra : palabras) {
+                    std::cout << palabra << std::endl;
+                }
 
                 // Inicializo el indexador y el buscador
                 ProcesoIndexBusqueda *proceso = new ProcesoIndexBusqueda();
+                proceso->ProcesoIndex(palabras);
                 std::unordered_map <int, std::vector<std::string>> impresionFinal = proceso->getImpresionFinal();
+
+                std::cout << "Recorriendo el unordered_map:" << std::endl;
+                for (const auto& entrada : impresionFinal) {
+                    int clave = entrada.first;
+                    const std::vector<std::string>& valores = entrada.second;
+
+                    std::cout << "Clave: " << clave << std::endl;
+                    
+                    // Recorrer el vector asociado a cada clave
+                    std::cout << "Palabras asociadas:" << std::endl;
+                    for (const auto& palabra : valores) {
+                        std::cout << palabra << std::endl;
+                    }
+
+                    std::cout << std::endl;
+                }
 
                 std::string responseBody = construirCuerpoRespuesta(impresionFinal);
 

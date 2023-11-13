@@ -183,6 +183,7 @@ class ProcesoIndexBusqueda{
         void searchPrincipal(vector<string> pfrase){
             //Tengo cada palabra
             //Esto es un vector
+            std::cout << "Marca" << std::endl;
             vector<vector<int>> librosTotales;
             //Voy a crear un hashtable de las palabras claves que guarden un hashtable con los libros para poder acceder despues
             std::unordered_map<std::string, std::unordered_map<int, std::unordered_map<int, int>>> infoPalabrasPaginas;
@@ -224,11 +225,11 @@ class ProcesoIndexBusqueda{
                 hashPaginas[elementRanking.first] = paginas; // Usar elementRanking.first como clave
             }
             
-        
+            std::cout << "Marca" << std::endl;
             std::unordered_map<int, vector<int>> hashPaginasImportantes = construirRankingPaginas(hashPaginas); //el hash que guarda lo de esa funcion, guarda 3 paginas por cada libro
 
             //De aquí para abajo estará mi lógica, este comentario lo anoto por si es necesario borrar mi lógica debido a que es incorrecta
-
+            std::cout << "Marca" << std::endl;
             impresionFinal = busquedaBPlus(hashPaginasImportantes);
 
             
@@ -240,7 +241,7 @@ class ProcesoIndexBusqueda{
 
         std::unordered_map <int, vector<string>> busquedaBPlus(std::unordered_map<int, vector<int>> hashPaginasImportantes){
             //Se hace la busqueda tomando en cuenta el ranking
-            std::unordered_map <int, vector<string>> impresionFinal;
+            std::unordered_map <int, vector<string>> pimpresionFinal;
 
             for (const auto &libro : hashPaginasImportantes){
 
@@ -259,10 +260,26 @@ class ProcesoIndexBusqueda{
                     fragmentos.push_back(fragmento);
                     //Ahora tengo que descomponer la pagina
                 }
-                impresionFinal[idLibro] = fragmentos;
+                pimpresionFinal[idLibro] = fragmentos;
             }
 
-            return impresionFinal;
+            std::cout << "Recorriendo el unordered_map:2" << std::endl;
+            for (const auto& entrada : impresionFinal) {
+                int clave = entrada.first;
+                const std::vector<std::string>& valores = entrada.second;
+
+                std::cout << "Clave: " << clave << std::endl;
+                    
+                // Recorrer el vector asociado a cada clave
+                std::cout << "Palabras asociadas:" << std::endl;
+                for (const auto& palabra : valores) {
+                    std::cout << palabra << std::endl;
+                }
+
+                std::cout << std::endl;
+            }
+
+            return pimpresionFinal;
 
         }
 
