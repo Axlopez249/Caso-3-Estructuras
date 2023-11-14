@@ -233,15 +233,10 @@ class ProcesoIndexBusqueda{
             std::cout << "Marca2-Prueba" << std::endl;
             impresionFinal = busquedaBPlus(hashPaginasImportantes);
 
-            for (const auto &impresion : impresionFinal)
-            {
-                cout << "libro: " << impresion.first << endl;
-                for (const auto &contenido : impresion.second)
-                {
-                    cout << contenido << endl;
-                }
-                
-            }
+            
+            
+
+            
             
 
             
@@ -504,6 +499,7 @@ class ProcesoIndexBusqueda{
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
         std::unordered_map <int, vector<fragmentoStruct>> getImpresionFinal(){
+            
             return impresionFinal;
         }
 };

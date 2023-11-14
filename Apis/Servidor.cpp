@@ -4,11 +4,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include "Archivos/Chatgpt.cpp"
+#include "Chatgpt.cpp"
 #include "ProcesoIndexBusqueda.cpp"
 #include "fragmentoStruct.h"
+#include <unordered_map>
+#include <vector>
 
-const int PORT = 8081;
+using namespace std;
+
+const int PORT = 8082;
 
 class Servidor {
 public:
@@ -83,9 +87,21 @@ public:
                 }
 
                 // Inicializo el indexador y el buscador
+                
                 ProcesoIndexBusqueda *proceso = new ProcesoIndexBusqueda();
                 proceso->ProcesoIndex(palabras);
                 std::unordered_map <int, std::vector<fragmentoStruct>> impresionFinal = proceso->getImpresionFinal();
+/*
+                for (const auto &impresion : impresionFinal)
+                {
+                    cout << "libro: " << impresion.first << endl;
+
+                    for (const auto &fragmento : impresion.second)
+                    {
+                        cout << "pagina: " << fragmento.numPagina << " Contenido: " << fragmento.contenido << endl;
+                    }
+                    
+                }*/
                 /*
                 std::cout << "Recorriendo el unordered_map:" << std::endl;
                 for (const auto& entrada : impresionFinal) {
@@ -134,6 +150,7 @@ private:
         // Construir el objeto JSON
         json cuerpoJSON;
 
+        
         for (const auto& entrada : impresionFinal) {
             int clave = entrada.first;
             const std::vector<fragmentoStruct>& valores = entrada.second;
@@ -143,7 +160,7 @@ private:
             for (const auto& fragmento : valores) {
                 json fragmentoJSON = {
                     {"contenido", fragmento.contenido},
-                    {"numero_pagina", fragmento.numeroPagina}
+                    {"numero_pagina", fragmento.numPagina}
                 };
                 fragmentosJSON.push_back(fragmentoJSON);
             }
@@ -156,6 +173,8 @@ private:
         std::string cuerpoRespuesta = cuerpoJSON.dump();
 
         std::cout << cuerpoRespuesta << std::endl;
+
+        
 
         return cuerpoRespuesta;
     }
