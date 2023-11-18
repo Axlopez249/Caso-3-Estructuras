@@ -1,0 +1,227 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Orden del árbol B+
+const int ORDER = 3;
+
+// Estructura para representar una página
+struct Page {
+    int pageNumber;
+    std::string content;
+
+    // Constructor de la página
+    Page(int num, const std::string& cont) : pageNumber(num), content(cont) {}
+};
+
+// Estructura para representar un nodo del árbol B+
+struct BPlusNode {
+    std::vector<int> keys;       // Claves almacenadas en el nodo
+    std::vector<Page> pages;     // Páginas asociadas a las claves
+    std::vector<BPlusNode*> children; // Nodos hijos
+    BPlusNode* next;            // Puntero al siguiente nodo (solo para nodos hoja)
+    bool isLeaf;                // Indicador de si el nodo es una hoja o no
+
+    // Constructor del nodo B+
+    BPlusNode(bool leaf = false) : isLeaf(leaf), next(nullptr) {}
+};
+
+// Clase principal que representa el árbol B+
+class BPlusTree {
+private:
+    BPlusNode* root;  // Raíz del árbol
+
+    // Funciones privadas para la inserción y división de nodos internos
+    void insertInLeaf(BPlusNode* node, int key, const Page& page);
+    void splitInternalNode(BPlusNode* parent, int index, BPlusNode* child);
+
+public:
+    // Constructor de la clase BPlusTree
+    BPlusTree() : root(nullptr) {}
+
+    // Funciones públicas para la inserción, búsqueda e impresión del árbol
+    void insert(int key, const std::string& content);
+    void printTree() const;
+    std::string search(int key) const;
+
+private:
+    // Función privada para imprimir el árbol de manera recursiva
+    void printTree(BPlusNode* node, int indent) const;
+};
+
+// Función para insertar una clave y su página en un nodo hoja
+void BPlusTree::insertInLeaf(BPlusNode* node, int key, const Page& page) {
+    auto it = std::lower_bound(node->keys.begin(), node->keys.end(), key);
+    int index = it - node->keys.begin();
+    node->keys.insert(it, key);
+    node->pages.insert(node->pages.begin() + index, page);
+}
+
+// Función para dividir un nodo interno si excede el tamaño permitido
+void BPlusTree::splitInternalNode(BPlusNode* parent, int index, BPlusNode* child) {
+    // Verificar que el tamaño del nodo sea mayor o igual a ORDER
+    if (child->keys.size() < ORDER) {
+        // No es necesario dividir el nodo interno
+        return;
+    }
+
+    // Crear un nuevo nodo interno
+    BPlusNode* newNode = new BPlusNode(false);
+
+    // Mover las claves a newNode
+    newNode->keys.insert(newNode->keys.begin(), child->keys.begin() + ORDER / 2, child->keys.end());
+    child->keys.erase(child->keys.begin() + ORDER / 2, child->keys.end());
+
+    // Mover los hijos a newNode
+    newNode->children.insert(newNode->children.begin(), child->children.begin() + ORDER / 2, child->children.end());
+    child->children.erase(child->children.begin() + ORDER / 2, child->children.end());
+
+    // Insertar la clave adecuada en el nodo padre
+    parent->keys.insert(parent->keys.begin() + index, newNode->keys[0]);
+
+    // Insertar el nuevo nodo interno en el nodo padre
+    parent->children.insert(parent->children.begin() + index + 1, newNode);
+
+    // Actualizar las claves en el nodo hijo
+    newNode->keys.erase(newNode->keys.begin());
+}
+
+// Función para insertar una clave y su contenido en el árbol B+
+void BPlusTree::insert(int key, const std::string& content) {
+    Page page(key, content);
+
+    // Caso especial: Árbol vacío
+    if (root == nullptr) {
+        root = new BPlusNode(true);
+        root->keys.push_back(key);
+        root->pages.push_back(page);
+        return;
+    }
+
+    BPlusNode* currentNode = root;
+    BPlusNode* parent = nullptr;
+    int index = 0;
+
+    // Buscar la hoja adecuada para la inserción
+    while (!currentNode->isLeaf) {
+        parent = currentNode;
+        auto it = std::upper_bound(currentNode->keys.begin(), currentNode->keys.end(), key);
+        index = it - currentNode->keys.begin();
+        currentNode = currentNode->children.at(index);
+    }
+
+    // Insertar la clave y la página en la hoja
+    insertInLeaf(currentNode, key, page);
+
+    // Si la hoja supera el tamaño permitido, dividirla
+    if (currentNode->keys.size() >= ORDER) {
+        BPlusNode* newNode = new BPlusNode(true);
+        newNode->next = currentNode->next;
+        currentNode->next = newNode;
+
+        // Mover las claves y páginas a newNode
+        newNode->keys.insert(newNode->keys.begin(), currentNode->keys.begin() + ORDER / 2, currentNode->keys.end());
+        newNode->pages.insert(newNode->pages.begin(), currentNode->pages.begin() + ORDER / 2, currentNode->pages.end());
+
+        currentNode->keys.erase(currentNode->keys.begin() + ORDER / 2, currentNode->keys.end());
+        currentNode->pages.erase(currentNode->pages.begin() + ORDER / 2, currentNode->pages.end());
+
+        // Caso especial: Nodo raíz
+        if (parent == nullptr) {
+            root = new BPlusNode(false);
+            root->keys.push_back(newNode->keys.at(0));
+            root->children.push_back(currentNode);
+            root->children.push_back(newNode);
+        } else {
+            // Insertar la clave del nuevo nodo en el nodo padre
+            index = std::lower_bound(parent->keys.begin(), parent->keys.end(), newNode->keys.at(0)) - parent->keys.begin();
+            parent->keys.insert(parent->keys.begin() + index, newNode->keys[0]);
+
+            // Insertar el nuevo nodo interno en el nodo padre
+            parent->children.insert(parent->children.begin() + index + 1, newNode);
+
+            // Si el nodo padre supera el tamaño permitido, dividirlo
+            if (parent->keys.size() >= ORDER) {
+                splitInternalNode(parent, index, newNode);
+            }
+        }
+    }
+}
+
+// Función para buscar una clave en el árbol B+
+std::string BPlusTree::search(int key) const {
+    BPlusNode* currentNode = root;
+
+    // Descender hasta la hoja que podría contener la clave
+    while (!currentNode->isLeaf) {
+        auto it = std::upper_bound(currentNode->keys.begin(), currentNode->keys.end(), key);
+        int index = it - currentNode->keys.begin();
+        currentNode = currentNode->children.at(index);
+    }
+
+    // Buscar la clave en la hoja
+    auto it = std::lower_bound(currentNode->keys.begin(), currentNode->keys.end(), key);
+    int index = it - currentNode->keys.begin();
+
+    // Devolver el contenido asociado a la clave (o una cadena vacía si no se encuentra)
+    if (index < currentNode->keys.size() && currentNode->keys.at(index) == key) {
+        return currentNode->pages.at(index).content;
+    }
+
+    return "";
+}
+
+// Función para imprimir el árbol B+
+void BPlusTree::printTree() const {
+    printTree(root, 0);
+}
+
+// Función para imprimir el árbol de manera recursiva
+void BPlusTree::printTree(BPlusNode* node, int indent) const {
+    if (node == nullptr) {
+        return;
+    }
+
+    // Imprimir nodos hoja
+    if (node->isLeaf) {
+        for (int i = 0; i < node->keys.size(); ++i) {
+            std::cout << node->keys.at(i) << ": " << node->pages.at(i).content << " | ";
+        }
+        std::cout << " -> ";
+        if (node->next != nullptr) {
+            std::cout << node->next->keys.at(0);
+        }
+        std::cout << std::endl;
+    } else {
+        // Imprimir nodos internos
+        for (int i = 0; i < node->keys.size(); ++i) {
+            std::cout << node->keys.at(i) << " ";
+        }
+        std::cout << std::endl;
+        for (int i = 0; i < node->children.size(); ++i) {
+            printTree(node->children.at(i), indent + 4);
+        }
+    }
+}
+
+// Función principal (comentada para evitar ejecución al incluir el archivo)
+/*
+int main() {
+    BPlusTree tree;
+    tree.insert(5, "Página 5");
+    tree.insert(8, "Página 8");
+    tree.insert(3, "Página 3");
+    tree.insert(12, "Página 12");
+    tree.insert(7, "Página 7");
+    tree.insert(1, "Página 1");
+
+    tree.printTree();
+
+    std::cout << "Buscando la página con clave 5: " << tree.search(5) << std::endl;
+    std::cout << "Buscando la página con clave 10: " << tree.search(10) << std::endl;
+
+    return 0;
+}
+*/

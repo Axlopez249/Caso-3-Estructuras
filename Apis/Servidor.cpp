@@ -12,7 +12,7 @@
 
 using namespace std;
 
-const int PORT = 8082;
+const int PORT = 8083;
 
 class Servidor {
 public:

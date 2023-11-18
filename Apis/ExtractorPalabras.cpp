@@ -25,7 +25,7 @@ class diccHashTables {
         
 
         diccHashTables() {//pfrase es el vector de las palabras claves de la frase de busqueda
-            string folderPath = "Biblioteca2"; // Reemplaza con la ruta de tu carpeta
+            string folderPath = "Biblioteca"; // Reemplaza con la ruta de tu carpeta
             vector<string> fileNames;
 
             try {

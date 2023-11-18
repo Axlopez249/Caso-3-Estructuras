@@ -419,10 +419,19 @@ class ProcesoIndexBusqueda{
             // Ordenar el vector de pares según los valores (apariciones)
             std::sort(vectorPares.begin(), vectorPares.end(), compararPorValor);
 
-            
-
-
-            return vectorPares;
+            std::vector<std::pair<int, int>> vectorCorrecto;
+            int contador = 0;
+            for (const auto &par : vectorPares)
+            {
+                vectorCorrecto.push_back(par);
+                contador++;
+                if (contador==10)
+                {
+                    break;
+                }
+                
+            }
+            return vectorCorrecto;
         }
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
