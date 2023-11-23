@@ -12,7 +12,7 @@
 
 using json = nlohmann::json;
 
-const int PORT = 8087;
+const int PORT = 8088;
 
 class Servidor {
 public:
@@ -86,8 +86,18 @@ public:
                 std::cout << requestBody << endl;
                 std::vector<string> frase = obtenerFraseDeBusqueda(requestBody);
 
-                std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> informacion = proceso->searchPrincipal(frase);
-
+                std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> informacion = proceso->searchPrincipal(frase);
+                /*for (const auto &libro : informacion)
+                {
+                    std::cout << libro.first << endl;
+                    for (const auto &parrafo : libro.second)
+                    {
+                        std::cout << parrafo.contenido << endl;
+                        std::cout << "" << endl;
+                    }
+                    
+                }*/
+                
 
                 // Responder con el JSON como la respuesta de la solicitud
                 std::string responseBody = construirRespuestaJSON(informacion);
@@ -121,28 +131,41 @@ private:
     Servidor() {}
 
     std::vector<string> obtenerFraseDeBusqueda(const std::string& requestBody) {
-        // Analiza el cuerpo JSON para obtener la frase de búsqueda
         std::vector<string> palabrasFrase;
-        json bodyJson = json::parse(requestBody);
-        string frase = bodyJson["frase"];
-        std::string palabra;
+        
+        try {
+            json bodyJson = json::parse(requestBody);
 
-        // Lee y almacena palabra por palabra
-        std::istringstream ss(frase);
-        while (ss >> palabra) {
-            if(palabra.length() > 3) {  // Limita a que las palabras tengan 4 o más carácteres
-                // Almacena la página en el vector asociado a la palabra
-                palabrasFrase.push_back(palabra);                       
+            // Verificar si el campo "frase" existe en el JSON
+            if (bodyJson.contains("frase")) {
+                string frase = bodyJson["frase"];
+                std::string palabra;
+
+                std::istringstream ss(frase);
+                while (ss >> palabra) {
+                    if (palabra.length() > 3) {
+                        palabrasFrase.push_back(palabra);
+                    }
+                }
+            } else {
+                // Manejar el caso donde el campo "frase" no está presente en el JSON
+                // Podrías lanzar una excepción, retornar un mensaje de error o manejarlo de otra manera según tu lógica
             }
+        } catch (const json::parse_error& e) {
+            // Manejar el error de parseo del JSON
+            // Puedes imprimir el mensaje de error e informar sobre el problema
+            std::cerr << "Error al parsear el JSON: " << e.what() << std::endl;
         }
+        
         return palabrasFrase;
     }
 
-    std::string construirRespuestaJSON(const std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>>& informacion) {
+
+    std::string construirRespuestaJSON(const std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>>& informacion) {
         json jsonResponse;
 
         for (const auto& libroInfo : informacion) {
-            const LibroStruct& libro = libroInfo.first;
+            string libroAutor = libroInfo.first;
             const std::vector<fragmentoStructParrafo>& fragmentos = libroInfo.second;
 
             json fragmentosJson;
@@ -151,7 +174,7 @@ private:
                 fragmentosJson[std::to_string(fragmento.numPagina)] = fragmento.contenido;
             }
 
-            jsonResponse[libro.nombreLibro + " - " + libro.autor] = fragmentosJson;
+            jsonResponse[libroAutor] = fragmentosJson;
         }
 
         return jsonResponse.dump();
@@ -164,17 +187,17 @@ int main() {
 
     ProcesoIndexBusqueda *proceso = new ProcesoIndexBusqueda();
     proceso->ProcesoIndex();
-    while (true)
-    {
-        if (proceso->getReadyIndex()==true)
-        {   
-            
-            Servidor servidor = Servidor::crearServidor();
-            servidor.ejecutar(proceso);
-            break;
-        }
+    
+    
+    if (proceso->getReadyIndex()==true)
+    {   
+        
+        Servidor servidor = Servidor::crearServidor();
+        servidor.ejecutar(proceso);
         
     }
+        
+    
 
     std::cout << "Fin del programa" << endl;
     

@@ -32,7 +32,7 @@ class ProcesoIndexBusqueda{
         vector<std::unordered_map<int, std::string>> vectorHashPaginas; //Vector de las paginas para ser metidas en el el b+
         std::vector<std::pair<int, int>> rankingLibros; //Ranking de libros
         std::unordered_map <int, vector<fragmentoStruct>> impresion;
-        std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> impresionFinal;
+        std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> impresionFinal;
 
         AVLTree *arbol;
 
@@ -186,7 +186,7 @@ class ProcesoIndexBusqueda{
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
         //Sin probar
-        std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> searchPrincipal(vector<string> pfrase){
+        std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> searchPrincipal(vector<string> pfrase){
             //Tengo cada palabra
             //Esto es un vector
             //std::cout << "" << std::endl;
@@ -236,6 +236,8 @@ class ProcesoIndexBusqueda{
 
             //De aquí para abajo estará mi lógica, este comentario lo anoto por si es necesario borrar mi lógica debido a que es incorrecta
             //std::cout << "Marca2-Prueba" << std::endl;
+            frase = pfrase;
+
             impresion = busquedaBPlus(hashPaginasImportantes);
             //Ahora solo falta de alguna manera llamar a la funcion de busquedaBPlus para poder extraer el contenido de las pagina y sacar los parrafos que son
             impresionFinal = prepararImpresionFinal(impresion);
@@ -243,53 +245,38 @@ class ProcesoIndexBusqueda{
 
             //Ahora tengo cada nombre de cada libro con su autor y por cada uno de ellos una serie de fragmentos donde se encuentran las palabras
 
-            frase = pfrase;
+            
 
             return impresionFinal;
         }
 
         //----------------------------------------------------------------------------------------------------------------------
-        std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> prepararImpresionFinal(std::unordered_map <int, vector<fragmentoStruct>> impresion){
+        std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> prepararImpresionFinal(std::unordered_map <int, vector<fragmentoStruct>> impresion){
 
-            std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> impresionFinal;
+            std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> impresionFinal;
 
             for (const auto &libro : impresion)
             {
-                string nameLibro = libros.at(libro.first);
-                string nameAutor = getAutor(libro.first);//Falta esta lógica
-
-                //Se crea la estructura para el libro
-                LibroStruct libroEstructura;
-                libroEstructura.nombreLibro = nameLibro;
-                libroEstructura.autor = nameAutor;
-
-                
+                string nameLibroAutor = libros.at(libro.first);              
                 std::vector<fragmentoStructParrafo> fragmentos;
                 for (const auto &pagina : libro.second)
                 {
                     string contenidoPagina = pagina.contenido;
                     int numeroPagina = pagina.numPagina;
                     string fragmentoParrafo = getParrafo(contenidoPagina);
+                    std:: cout << fragmentoParrafo << endl;
                     fragmentoStructParrafo parrafo;
                     parrafo.contenido = fragmentoParrafo;
                     parrafo.numPagina = numeroPagina;
                     fragmentos.push_back(parrafo);
                 }
 
-                std::pair<LibroStruct, std::vector<fragmentoStructParrafo>> nuevoPar(libroEstructura, fragmentos);
+                std::pair<string, std::vector<fragmentoStructParrafo>> nuevoPar(nameLibroAutor, fragmentos);
                 impresionFinal.emplace_back(nuevoPar);
 
             }
             
             return impresionFinal;
-        }
-
-
-        //----------------------------------------------------------------------------------------------------------------------------------------------
-        std::string getAutor(int indiceLibro ){
-            //Logica para traer el autor
-            string autor;
-            return autor;
         }
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -311,7 +298,7 @@ class ProcesoIndexBusqueda{
             for (const auto &palabra_a_buscar : palabrasBusqueda) {
                 auto iterador = std::find(almacenamiento.begin(), almacenamiento.end(), palabra_a_buscar);
                 if (iterador != almacenamiento.end()) {
-                    std::cout << "La palabra '" << palabra_a_buscar << "' está en el vector." << std::endl;
+                    //std::cout << "La palabra '" << palabra_a_buscar << "' está en el vector." << std::endl;
 
                     size_t indice_encontrado = std::distance(almacenamiento.begin(), iterador);
 
