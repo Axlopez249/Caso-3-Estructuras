@@ -41,12 +41,24 @@ private:
     void printTree(BPlusNode* node, int indent) const;
 };
 
+
+
+
+
+
+
+
 void BPlusTree::insertInLeaf(BPlusNode* node, int key, const Page& page) {
     auto it = std::lower_bound(node->keys.begin(), node->keys.end(), key);
     int index = it - node->keys.begin();
     node->keys.insert(it, key);
     node->pages.insert(node->pages.begin() + index, page);
+    
 }
+
+
+
+
 
 void BPlusTree::splitInternalNode(BPlusNode* parent, int index, BPlusNode* child) {
     // Verificar que el tamaño del nodo sea mayor o igual a ORDER
@@ -76,6 +88,10 @@ void BPlusTree::splitInternalNode(BPlusNode* parent, int index, BPlusNode* child
 }
 
 
+
+
+
+
 void BPlusTree::insert(int key, const std::string& content) {
     Page page(key, content);
 
@@ -100,32 +116,54 @@ void BPlusTree::insert(int key, const std::string& content) {
     insertInLeaf(currentNode, key, page);
 
     if (currentNode->keys.size() >= ORDER) {
+    // Se verifica si el nodo actual excede o iguala el tamaño permitido
+
         BPlusNode* newNode = new BPlusNode(true);
+        // Se crea un nuevo nodo hoja
+
         newNode->next = currentNode->next;
         currentNode->next = newNode;
+        // Se ajustan los punteros para mantener la estructura de lista enlazada de las hojas
 
         newNode->keys.insert(newNode->keys.begin(), currentNode->keys.begin() + ORDER / 2, currentNode->keys.end());
         newNode->pages.insert(newNode->pages.begin(), currentNode->pages.begin() + ORDER / 2, currentNode->pages.end());
+        // Se mueven la mitad de las claves y páginas del nodo actual al nuevo nodo hoja
 
         currentNode->keys.erase(currentNode->keys.begin() + ORDER / 2, currentNode->keys.end());
         currentNode->pages.erase(currentNode->pages.begin() + ORDER / 2, currentNode->pages.end());
+        // Se eliminan las claves y páginas que se movieron al nuevo nodo hoja del nodo actual
 
         if (parent == nullptr) {
+            // Si el nodo actual es la raíz, se crea una nueva raíz
+
             root = new BPlusNode(false);
             root->keys.push_back(newNode->keys.at(0));
             root->children.push_back(currentNode);
             root->children.push_back(newNode);
+            // Se actualiza la raíz con la nueva información
+
         } else {
+            // Si el nodo actual no es la raíz
+
             index = std::lower_bound(parent->keys.begin(), parent->keys.end(), newNode->keys.at(0)) - parent->keys.begin();
+            // Se encuentra la posición en la que se debería insertar la clave del nuevo nodo en el nodo padre
+
             parent->keys.insert(parent->keys.begin() + index, newNode->keys[0]);
             parent->children.insert(parent->children.begin() + index + 1, newNode);
+            // Se inserta la clave del nuevo nodo y el nuevo nodo en el nodo padre
 
             if (parent->keys.size() >= ORDER) {
+                // Si el nodo padre excede o iguala el tamaño permitido
+
                 splitInternalNode(parent, index, newNode);
+                // Se llama a la función de división del nodo interno
             }
         }
     }
+
 }
+
+
 
 std::string BPlusTree::search(int key) const {
     BPlusNode* currentNode = root;
@@ -146,6 +184,10 @@ std::string BPlusTree::search(int key) const {
     return "";
 }
 
+
+
+
+/*
 void BPlusTree::printTree() const {
     printTree(root, 0);
 }
@@ -173,7 +215,7 @@ void BPlusTree::printTree(BPlusNode* node, int indent) const {
             printTree(node->children.at(i), indent + 4);
         }
     }
-}
+}*/
 /*
 int main() {
     BPlusTree tree;

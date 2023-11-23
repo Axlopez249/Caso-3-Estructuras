@@ -60,7 +60,7 @@ class Chatgpt{
             std::string prompt = "Usuario:"+ promptv +"\nAsistente: Mi nombre es GPT-3.5. ¿En qué puedo ayudarte hoy?";
 
             // Configura la clave de API
-            std::string api_key = "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";
+            std::string api_key = "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";
 
             // Inicializa libcurl
             curl_global_init(CURL_GLOBAL_DEFAULT);

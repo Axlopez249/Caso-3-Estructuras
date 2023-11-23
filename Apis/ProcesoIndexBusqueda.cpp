@@ -10,25 +10,29 @@
 #include <unordered_map>
 #include "Avl.cpp"
 #include "nodo.h"
-//#include "Chatgpt.cpp"
 #include "ExtractorPalabras.cpp"
 #include "BPlusTree.h"
 #include <map>
 #include "paginaStruct.h"
 #include "fragmentoStruct.h"
-//#include "paginaInterseccion.h"
+#include "fragmetoStructParrafo.h"
+#include "LibroStruct.h"
+#include <algorithm>
+#include <sstream>
 
 namespace fs = std::filesystem;
 using namespace std;
 
 class ProcesoIndexBusqueda{
     private:
+        bool index = false;
         vector<std::unordered_map<std::string, std::vector<int>>> vectorHash; //vector de hash que tienen una palabra y las paginas y sus cantidad
         vector<string> libros; //Nombre de los libros
         vector<string> frase;
         vector<std::unordered_map<int, std::string>> vectorHashPaginas; //Vector de las paginas para ser metidas en el el b+
         std::vector<std::pair<int, int>> rankingLibros; //Ranking de libros
-        std::unordered_map <int, vector<fragmentoStruct>> impresionFinal;
+        std::unordered_map <int, vector<fragmentoStruct>> impresion;
+        std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> impresionFinal;
 
         AVLTree *arbol;
 
@@ -39,7 +43,7 @@ class ProcesoIndexBusqueda{
 //        AVLTree arbol; //arbol avl
     public:
 
-        void ProcesoIndex(vector<string> pfrase) {    //pfrase es el vector de las palabras claves de la frase de busqueda
+        void ProcesoIndex() {    //pfrase es el vector de las palabras claves de la frase de busqueda
             
             vectorHash = extractorPalabras->getVectorHash();//Vector de hash
             libros = extractorPalabras->getLibros();
@@ -85,7 +89,7 @@ class ProcesoIndexBusqueda{
             //Tengo este vector de hashtable de paginas
             vectorHashPaginas = extractorPalabras->getVectorHashPaginas();
 
-            std::cout << vectorHashPaginas.size() << std::endl;
+            //std::cout << vectorHashPaginas.size() << std::endl;
             //Ahora tengo que usar los arboles b+
             
             //Se crean 30 arboles - uno para cada libro
@@ -126,7 +130,7 @@ class ProcesoIndexBusqueda{
 //                    std::cout << "Después de agregado" << std::endl;
                     
                 }
-                std::cout << "HAHA2" << std::endl;
+                //std::cout << "HAHA2" << std::endl;
                  //Despues de indexar todas sus palabras me encargo de meterlo al vector
                 vectorArbolesB.push_back(arbolB);
             }
@@ -134,12 +138,13 @@ class ProcesoIndexBusqueda{
             //Hasta el momento todo esta en arboles
             //Ahora para asegurar que todo esta guardado bien se inicializan las otras funciones despues del almacenamiento
 
-            
-            frase = pfrase;
 
-            searchPrincipal(pfrase);
+            std::cout << "Indexacion lista" << endl;
+            index = true;
             
         }
+
+        
 
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -181,10 +186,10 @@ class ProcesoIndexBusqueda{
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
         //Sin probar
-        void searchPrincipal(vector<string> pfrase){
+        std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> searchPrincipal(vector<string> pfrase){
             //Tengo cada palabra
             //Esto es un vector
-            std::cout << "Marca" << std::endl;
+            //std::cout << "" << std::endl;
             vector<vector<int>> librosTotales;
             //Voy a crear un hashtable de las palabras claves que guarden un hashtable con los libros para poder acceder despues
             std::unordered_map<std::string, std::unordered_map<int, std::unordered_map<int, int>>> infoPalabrasPaginas;
@@ -226,24 +231,109 @@ class ProcesoIndexBusqueda{
                 hashPaginas[elementRanking.first] = paginas; // Usar elementRanking.first como clave
             }
             
-            std::cout << "Marca" << std::endl;
+            //std::cout << "Marca" << std::endl;
             std::unordered_map<int, vector<int>> hashPaginasImportantes = construirRankingPaginas(hashPaginas); //el hash que guarda lo de esa funcion, guarda 3 paginas por cada libro
 
             //De aquí para abajo estará mi lógica, este comentario lo anoto por si es necesario borrar mi lógica debido a que es incorrecta
-            std::cout << "Marca2-Prueba" << std::endl;
-            impresionFinal = busquedaBPlus(hashPaginasImportantes);
-
-            
-            
-
-            
-            
-
-            
-
+            //std::cout << "Marca2-Prueba" << std::endl;
+            impresion = busquedaBPlus(hashPaginasImportantes);
             //Ahora solo falta de alguna manera llamar a la funcion de busquedaBPlus para poder extraer el contenido de las pagina y sacar los parrafos que son
+            impresionFinal = prepararImpresionFinal(impresion);
+
+
+            //Ahora tengo cada nombre de cada libro con su autor y por cada uno de ellos una serie de fragmentos donde se encuentran las palabras
+
+            frase = pfrase;
+
+            return impresionFinal;
+        }
+
+        //----------------------------------------------------------------------------------------------------------------------
+        std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> prepararImpresionFinal(std::unordered_map <int, vector<fragmentoStruct>> impresion){
+
+            std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> impresionFinal;
+
+            for (const auto &libro : impresion)
+            {
+                string nameLibro = libros.at(libro.first);
+                string nameAutor = getAutor(libro.first);//Falta esta lógica
+
+                //Se crea la estructura para el libro
+                LibroStruct libroEstructura;
+                libroEstructura.nombreLibro = nameLibro;
+                libroEstructura.autor = nameAutor;
+
+                
+                std::vector<fragmentoStructParrafo> fragmentos;
+                for (const auto &pagina : libro.second)
+                {
+                    string contenidoPagina = pagina.contenido;
+                    int numeroPagina = pagina.numPagina;
+                    string fragmentoParrafo = getParrafo(contenidoPagina);
+                    fragmentoStructParrafo parrafo;
+                    parrafo.contenido = fragmentoParrafo;
+                    parrafo.numPagina = numeroPagina;
+                    fragmentos.push_back(parrafo);
+                }
+
+                std::pair<LibroStruct, std::vector<fragmentoStructParrafo>> nuevoPar(libroEstructura, fragmentos);
+                impresionFinal.emplace_back(nuevoPar);
+
+            }
+            
+            return impresionFinal;
+        }
+
+
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+        std::string getAutor(int indiceLibro ){
+            //Logica para traer el autor
+            string autor;
+            return autor;
+        }
+
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+
+        std::string getParrafo(string pagina){
+
+            std::vector<std::string> palabrasBusqueda = frase;
+            std::string fragmento = "";
+            std::vector<std::string> almacenamiento;
+            std::string palabra;
+
+            // Lee y almacena palabra por palabra
+            std::istringstream ss(pagina);
+            while (ss >> palabra) {
+                almacenamiento.push_back(palabra);
+            }
+
+            //Recorro ahora las palabras del almacenamiento
+            for (const auto &palabra_a_buscar : palabrasBusqueda) {
+                auto iterador = std::find(almacenamiento.begin(), almacenamiento.end(), palabra_a_buscar);
+                if (iterador != almacenamiento.end()) {
+                    std::cout << "La palabra '" << palabra_a_buscar << "' está en el vector." << std::endl;
+
+                    size_t indice_encontrado = std::distance(almacenamiento.begin(), iterador);
+
+                    size_t indice_inicio = (indice_encontrado > 20) ? indice_encontrado - 20 : 0;
+                    size_t indice_final = std::min(indice_encontrado + 20, almacenamiento.size() - 1);
+
+                    for (size_t i = indice_inicio; i <= indice_final; ++i) {
+                        fragmento += almacenamiento[i];
+                        fragmento += " ";
+                    }
+                    break;
+                }
+            }
+
+            std::cout << fragmento << std::endl;
+
+            return fragmento;
 
         }
+
+
+
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
         std::unordered_map <int, vector<fragmentoStruct>> busquedaBPlus(std::unordered_map<int, vector<int>> hashPaginasImportantes){
@@ -292,52 +382,6 @@ class ProcesoIndexBusqueda{
             return pimpresionFinal;
 
         }
-
-
-        /*
-        std::string obtenerFragmento(const std::string& texto) {
-            std::istringstream iss(texto);
-            std::vector<std::string> palabras_texto{
-                std::istream_iterator<std::string>{iss},
-                std::istream_iterator<std::string>{}
-            };
-
-            int inicio = 0;
-            int fin = 0;
-
-            for (int i = 0; i < palabras_texto.size(); ++i) {
-                if (palabras_texto[i] == frase[0]) {
-                    // Encontramos la primera palabra en el vector
-                    inicio = i;
-                    fin = i;
-
-                    for (int j = 1; j < frase.size(); ++j) {
-                        if (i + j < palabras_texto.size() && palabras_texto[i + j] == frase[j]) {
-                            fin = i + j;
-                        } else {
-                            // No encontramos una palabra, reiniciar la búsqueda desde el siguiente índice
-                            inicio = 0;
-                            fin = 0;
-                            break;
-                        }
-                    }
-
-                    if (fin - inicio + 1 == frase.size()) {
-                        // Encontramos un fragmento que contiene todas las palabras en orden
-                        break;
-                    }
-                }
-            }
-
-            // Construir el fragmento
-            std::ostringstream fragmento;
-            for (int i = inicio; i <= fin; ++i) {
-                fragmento << palabras_texto[i] << " ";
-            }
-
-            return fragmento.str();
-        }*/
-
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -490,7 +534,7 @@ class ProcesoIndexBusqueda{
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
         //Prueba de indexacion
-        std::unordered_map<int, int> crearHash2(vector<int> pvector){
+        /*std::unordered_map<int, int> crearHash2(vector<int> pvector){
             std::unordered_map<int, int> counts;
 
             for (int i = 0; i < pvector.size(); ++i) {
@@ -503,13 +547,12 @@ class ProcesoIndexBusqueda{
             }
             
             return counts;
-        }
+        }*/
 
-        //----------------------------------------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------------------------------------------}
 
-        std::unordered_map <int, vector<fragmentoStruct>> getImpresionFinal(){
-            
-            return impresionFinal;
+        bool getReadyIndex(){
+            return index;
         }
 };
 

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Libros</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #search-form {
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        #search-input {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #search-button {
+            width: 30%;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #result-container {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        #result-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .result-item {
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Buscador de Libros</h1>
+
+    <div id="search-form">
+        <input type="text" id="search-input" placeholder="Ingresa la frase o palabra clave">
+        <button id="search-button" onclick="realizarBusqueda()">Buscar</button>
+    </div>
+
+    <div id="result-container">
+        <ul id="result-list"></ul>
+    </div>
+
+    <script>
+        function realizarBusqueda() {
+            // Obtener el valor del input de búsqueda
+            var frase = document.getElementById('search-input').value;
+    
+            // Realizar la solicitud al servidor
+            fetch('http://localhost:8082/api/busqueda', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ frase: frase })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                return response.json();
+            })
+            .then(data => mostrarResultados(data))
+            .catch(error => console.error('Error:', error));
+        }
+    
+        function mostrarResultados(data) {
+            var resultContainer = document.getElementById('result-list');
+            resultContainer.innerHTML = '';
+
+            if (typeof data === 'object') {
+                for (const [libro, fragmentos] of Object.entries(data)) {
+                    for (const [pagina, contenido] of Object.entries(fragmentos)) {
+                        var listItem = document.createElement('li');
+                        listItem.className = 'result-item';
+                        listItem.textContent = 'Libro: ' + libro + ', Página: ' + pagina + ', Contenido: ' + contenido;
+                        resultContainer.appendChild(listItem);
+                    }
+                }
+            } else {
+                var errorItem = document.createElement('li');
+                errorItem.textContent = 'Los datos recibidos no son válidos.';
+                resultContainer.appendChild(errorItem);
+            }
+        }
+
+    </script>
+</body>
+</html>

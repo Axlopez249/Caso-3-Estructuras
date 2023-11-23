@@ -18,7 +18,8 @@ private:
     }
 
     int max(int a, int b) {
-        return (a > b) ? a : b;
+        return (a > b) ? a : b; //Esto es como decir un if-else en una sola linea
+        //Esto lo que devuelve es el maximo, si a es mayor a b entonces devuelve a o b
     }
 
     nodo* rotateRight(nodo* y) {
@@ -47,7 +48,7 @@ private:
         return y;
     }
 
-    int getBalance(nodo* nodo) {
+    int getBalance(nodo* nodo) {//Obtener el balanca que es la diferencia de alturas de la parte izquierda y derecha de un nodo
         if (nodo == nullptr) {
             return 0;
         }
@@ -70,7 +71,9 @@ private:
         }
 
         nodo->altura = 1 + max(getAltura(nodo->left), getAltura(nodo->right));
-
+        //En esata zona se da a conocer el balance del nodo para generar una rotacion si es necesaria
+        //como la resta es izquierda menos derecha, entoces se toman en cuenta los negativos y el orden alfabetico de las palbras
+        //Osea la palabra que se quiere ingresar
         int balance = getBalance(nodo);
 
         if (balance > 1 && palabra < nodo->left->palabra) {

@@ -4,15 +4,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include "Chatgpt.cpp"
+#include "json.hpp"
 #include "ProcesoIndexBusqueda.cpp"
-#include "fragmentoStruct.h"
-#include <unordered_map>
 #include <vector>
+#include <algorithm>
+#include <sstream>
 
-using namespace std;
+using json = nlohmann::json;
 
-const int PORT = 8083;
+const int PORT = 8087;
 
 class Servidor {
 public:
@@ -20,7 +20,7 @@ public:
         return Servidor();
     }
 
-    void ejecutar() {
+    void ejecutar(ProcesoIndexBusqueda *proceso) {
         int serverSocket, clientSocket;
         struct sockaddr_in serverAddress, clientAddress;
         socklen_t clientAddressLength = sizeof(clientAddress);
@@ -71,65 +71,40 @@ public:
             // Analizar la solicitud HTTP para encontrar el cuerpo
             std::string request(buffer);
             size_t bodyStart = request.find("\r\n\r\n");
-            if (bodyStart != std::string::npos) {
+            size_t requestStart = request.find(" ") + 1; // Encuentra el inicio de la URL
+            size_t requestEnd = request.find(" ", requestStart); // Encuentra el final de la URL
+            std::string requestURL = request.substr(requestStart, requestEnd - requestStart); // Extrae la URL
+
+            // Verifica si la solicitud es para '/api/busqueda'
+            if (requestURL == "/api/busqueda") {
+                // Si la solicitud es para '/api/busqueda', maneja esta ruta
                 // Extraer el cuerpo de la solicitud
-                std::string requestBody = request.substr(bodyStart + 4);
 
-                //Estoy llamando a chatgpt para poder extraer la frase en palabras
-                std::string prompt = "Podrias darme solamente las palabras claves de esta frase: " + requestBody;
-                Chatgpt* prueba = new Chatgpt(prompt);
-//                std::cout << prompt << std::endl;
-                std::vector<std::string> palabras = prueba->getPalabras();
-
-                std::cout << "Palabras clave extraídas:" << std::endl;
-                for (const auto& palabra : palabras) {
-                    std::cout << palabra << std::endl;
-                }
-
-                // Inicializo el indexador y el buscador
                 
-                ProcesoIndexBusqueda *proceso = new ProcesoIndexBusqueda();
-                proceso->ProcesoIndex(palabras);
-                std::unordered_map <int, std::vector<fragmentoStruct>> impresionFinal = proceso->getImpresionFinal();
-/*
-                for (const auto &impresion : impresionFinal)
-                {
-                    cout << "libro: " << impresion.first << endl;
 
-                    for (const auto &fragmento : impresion.second)
-                    {
-                        cout << "pagina: " << fragmento.numPagina << " Contenido: " << fragmento.contenido << endl;
-                    }
-                    
-                }*/
-                /*
-                std::cout << "Recorriendo el unordered_map:" << std::endl;
-                for (const auto& entrada : impresionFinal) {
-                    int clave = entrada.first;
-                    const std::vector<std::string>& valores = entrada.second;
+                std::string requestBody = request.substr(bodyStart + 4);
+                std::cout << requestBody << endl;
+                std::vector<string> frase = obtenerFraseDeBusqueda(requestBody);
 
-                    std::cout << "Clave: " << clave << std::endl;
-                    
-                    // Recorrer el vector asociado a cada clave
-                    std::cout << "Palabras asociadas:" << std::endl;
-                    for (const auto& palabra : valores) {
-                        std::cout << palabra << std::endl;
-                    }
+                std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>> informacion = proceso->searchPrincipal(frase);
 
-                    std::cout << std::endl;
-                }*/
 
-                std::string responseBody = construirCuerpoRespuesta(impresionFinal);
+                // Responder con el JSON como la respuesta de la solicitud
+                std::string responseBody = construirRespuestaJSON(informacion);
 
-                // Imprimir el cuerpo de la solicitud en la consola
-                std::cout << "Cuerpo de la solicitud: " << responseBody << std::endl;
+                // Responder con la respuesta JSON
+                std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n";
+                response += "Access-Control-Allow-Origin: *\r\n";
+                response += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
+                response += "Access-Control-Allow-Headers: Content-Type\r\n";
+                response += "\r\n" + responseBody;
 
-                // Responder con el cuerpo recibido
-                std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n" + responseBody;
                 send(clientSocket, response.c_str(), response.size(), 0);
             } else {
-                // Si no se encuentra un cuerpo, responder con un mensaje de error
-                std::string response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nNo se encontró un cuerpo en la solicitud.";
+                // Si la solicitud no es para '/api/busqueda', maneja otras rutas si es necesario
+
+                // Respondemos con un mensaje indicando una solicitud no encontrada para esa ruta
+                std::string response = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nLa ruta solicitada no fue encontrada.";
                 send(clientSocket, response.c_str(), response.size(), 0);
             }
 
@@ -142,47 +117,68 @@ public:
     }
 
 private:
-    Servidor() {
-        // Constructor privado
+    std::string frase;
+    Servidor() {}
+
+    std::vector<string> obtenerFraseDeBusqueda(const std::string& requestBody) {
+        // Analiza el cuerpo JSON para obtener la frase de búsqueda
+        std::vector<string> palabrasFrase;
+        json bodyJson = json::parse(requestBody);
+        string frase = bodyJson["frase"];
+        std::string palabra;
+
+        // Lee y almacena palabra por palabra
+        std::istringstream ss(frase);
+        while (ss >> palabra) {
+            if(palabra.length() > 3) {  // Limita a que las palabras tengan 4 o más carácteres
+                // Almacena la página en el vector asociado a la palabra
+                palabrasFrase.push_back(palabra);                       
+            }
+        }
+        return palabrasFrase;
     }
 
-    std::string construirCuerpoRespuesta(const std::unordered_map<int, std::vector<fragmentoStruct>>& impresionFinal) {
-        // Construir el objeto JSON
-        json cuerpoJSON;
+    std::string construirRespuestaJSON(const std::vector<std::pair<LibroStruct, std::vector<fragmentoStructParrafo>>>& informacion) {
+        json jsonResponse;
 
-        
-        for (const auto& entrada : impresionFinal) {
-            int clave = entrada.first;
-            const std::vector<fragmentoStruct>& valores = entrada.second;
+        for (const auto& libroInfo : informacion) {
+            const LibroStruct& libro = libroInfo.first;
+            const std::vector<fragmentoStructParrafo>& fragmentos = libroInfo.second;
 
-            // Crear un arreglo JSON para los fragmentos asociados a la clave
-            json fragmentosJSON;
-            for (const auto& fragmento : valores) {
-                json fragmentoJSON = {
-                    {"contenido", fragmento.contenido},
-                    {"numero_pagina", fragmento.numPagina}
-                };
-                fragmentosJSON.push_back(fragmentoJSON);
+            json fragmentosJson;
+
+            for (const auto& fragmento : fragmentos) {
+                fragmentosJson[std::to_string(fragmento.numPagina)] = fragmento.contenido;
             }
 
-            // Añadir una entrada al objeto JSON
-            cuerpoJSON[std::to_string(clave)] = fragmentosJSON;
+            jsonResponse[libro.nombreLibro + " - " + libro.autor] = fragmentosJson;
         }
 
-        // Convertir el objeto JSON a una cadena
-        std::string cuerpoRespuesta = cuerpoJSON.dump();
-
-        std::cout << cuerpoRespuesta << std::endl;
-
-        
-
-        return cuerpoRespuesta;
+        return jsonResponse.dump();
     }
 };
 
 int main() {
-    Servidor servidor = Servidor::crearServidor();
-    servidor.ejecutar();
+    
+    std::cout << "El programa empieza" << endl;
+
+    ProcesoIndexBusqueda *proceso = new ProcesoIndexBusqueda();
+    proceso->ProcesoIndex();
+    while (true)
+    {
+        if (proceso->getReadyIndex()==true)
+        {   
+            
+            Servidor servidor = Servidor::crearServidor();
+            servidor.ejecutar(proceso);
+            break;
+        }
+        
+    }
+
+    std::cout << "Fin del programa" << endl;
+    
+    
 
     return 0;
 }
