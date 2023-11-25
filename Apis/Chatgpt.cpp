@@ -37,7 +37,7 @@ public:
         string prompt = "Usuario:" + promptv + "\nAsistente: Mi nombre es GPT-3.5. ¿En qué puedo ayudarte hoy?";
 
         // Configura la clave de API
-        string api_key = "";
+        string api_key = "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";
 
         // Inicializa libcurl
         curl_global_init(CURL_GLOBAL_DEFAULT);
