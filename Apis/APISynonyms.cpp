@@ -5,6 +5,7 @@
 #include <sstream>
 
 using json = nlohmann::json;
+using namespace std;
 
 class Synonyms {
 private:
@@ -69,4 +70,14 @@ public:
         return sinonimos;
     }
 };
+
+int main(){
+    Synonyms *sinonimos = new Synonyms("the night is beautiful");
+    sinonimos->extraccion();
+    for (const auto &palabra : sinonimos->getSinonimos())
+    {
+        cout << palabra << endl;
+    }
+    
+}
 

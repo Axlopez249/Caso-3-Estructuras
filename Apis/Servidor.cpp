@@ -9,17 +9,19 @@
 #include <vector>
 #include <algorithm>
 #include <sstream>
+#include "Chatgpt.cpp"
+#include "ApiImagen.h"
 
 using json = nlohmann::json;
 
-const int PORT = 8088;
+const int PORT = 8086;
 
 class Servidor {
 public:
     static Servidor crearServidor() {
         return Servidor();
     }
-
+    
     void ejecutar(ProcesoIndexBusqueda *proceso) {
         int serverSocket, clientSocket;
         struct sockaddr_in serverAddress, clientAddress;
@@ -83,25 +85,48 @@ public:
                 
 
                 std::string requestBody = request.substr(bodyStart + 4);
-                std::cout << requestBody << endl;
-                std::vector<string> frase = obtenerFraseDeBusqueda(requestBody);
-
-                std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> informacion = proceso->searchPrincipal(frase);
-                /*for (const auto &libro : informacion)
-                {
-                    std::cout << libro.first << endl;
-                    for (const auto &parrafo : libro.second)
-                    {
-                        std::cout << parrafo.contenido << endl;
-                        std::cout << "" << endl;
-                    }
-                    
-                }*/
+                cout << "cuerpo del json de recibida: " + requestBody << endl;
                 
+                std::vector<string> frase = obtenerFraseDeBusqueda(requestBody);
+                cout << "" << endl;
+                for (const auto &palabr : frase)
+                {
+                    cout << "palabra de la frase: " + palabr << endl;
+                }
+                
+                
+                std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> informacion = proceso->searchPrincipal(frase);
+                
+                //Llamo mi clase de chatgpt
+                Chatgpt extractorGenero;
+                Chatgpt extractorImagen;
 
+                //Extraigo el genero de la frase con la clase
+                
+                std::string promptGenero = "Dame un genero de estos: negativo, positivo, neutro, misterioso, novela, fantasía relacionado para esta frase: " + vfrase;
+                std::string promptImagen = "Toma un sustantivo o la palabra mas importante de esta frase: " + vfrase;
+                
+                extractorGenero.getRespuesta(promptGenero);
+                std::string genero = extractorGenero.getGenero();
+                cout << "" << endl;
+                cout << "El genero es" + genero << endl;
+
+                extractorImagen.getRespuesta(promptImagen);
+                std::string palabraBusquedaImagen = extractorImagen.getPalabraImportante(frase);
+
+                cout << "la palabra para la imagen es: " +  palabraBusquedaImagen << endl;
+
+                ApiImagen pixabay(palabraBusquedaImagen);
+                std::string imagen = pixabay.getUrl();
+                cout << "el url de la imagen es: " +  imagen << endl;
                 // Responder con el JSON como la respuesta de la solicitud
-                std::string responseBody = construirRespuestaJSON(informacion);
+                std::string responseBody = construirRespuestaJSON(informacion, genero, imagen);
 
+                cout << "La respuesta final es: "<< endl;
+
+                cout << responseBody << endl;
+
+                //close(clientSocket);
                 // Responder con la respuesta JSON
                 std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n";
                 response += "Access-Control-Allow-Origin: *\r\n";
@@ -110,6 +135,12 @@ public:
                 response += "\r\n" + responseBody;
 
                 send(clientSocket, response.c_str(), response.size(), 0);
+                
+                
+
+                
+
+                
             } else {
                 // Si la solicitud no es para '/api/busqueda', maneja otras rutas si es necesario
 
@@ -127,7 +158,8 @@ public:
     }
 
 private:
-    std::string frase;
+    std::string vfrase;
+    std::string palabraBusquedaImagen;
     Servidor() {}
 
     std::vector<string> obtenerFraseDeBusqueda(const std::string& requestBody) {
@@ -139,6 +171,7 @@ private:
             // Verificar si el campo "frase" existe en el JSON
             if (bodyJson.contains("frase")) {
                 string frase = bodyJson["frase"];
+                vfrase = frase;
                 std::string palabra;
 
                 std::istringstream ss(frase);
@@ -147,22 +180,23 @@ private:
                         palabrasFrase.push_back(palabra);
                     }
                 }
-            } else {
-                // Manejar el caso donde el campo "frase" no está presente en el JSON
-                // Podrías lanzar una excepción, retornar un mensaje de error o manejarlo de otra manera según tu lógica
             }
         } catch (const json::parse_error& e) {
             // Manejar el error de parseo del JSON
             // Puedes imprimir el mensaje de error e informar sobre el problema
-            std::cerr << "Error al parsear el JSON: " << e.what() << std::endl;
+            //std::cerr << "Error al parsear el JSON: " << e.what() << std::endl;
         }
         
         return palabrasFrase;
     }
 
 
-    std::string construirRespuestaJSON(const std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>>& informacion) {
+    std::string construirRespuestaJSON(const std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>>& informacion, string genero, string imagen) {
         json jsonResponse;
+
+        // Agregar tipoGenero y UrlImagen al JSON
+        jsonResponse["tipoGenero"] = genero;
+        jsonResponse["UrlImagen"] = imagen;
 
         for (const auto& libroInfo : informacion) {
             string libroAutor = libroInfo.first;
@@ -179,6 +213,7 @@ private:
 
         return jsonResponse.dump();
     }
+
 };
 
 int main() {
@@ -191,12 +226,10 @@ int main() {
     
     if (proceso->getReadyIndex()==true)
     {   
-        
         Servidor servidor = Servidor::crearServidor();
-        servidor.ejecutar(proceso);
-        
+        servidor.ejecutar(proceso);   
     }
-        
+      
     
 
     std::cout << "Fin del programa" << endl;

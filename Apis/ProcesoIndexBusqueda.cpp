@@ -48,8 +48,6 @@ class ProcesoIndexBusqueda{
             vectorHash = extractorPalabras->getVectorHash();//Vector de hash
             libros = extractorPalabras->getLibros();
 
-            //Ahora se hace uso de los objetos arboles para acomodar la informacion
-            //arbol* = new AVLTree();  
             
 
             arbol = new AVLTree();
@@ -61,15 +59,9 @@ class ProcesoIndexBusqueda{
             for (const auto& hash : vectorHash) {
                 std::cout << indicePrimero << std::endl;
                 indicePrimero++;
-                //For para poder recorrer cada hash
-                //Dentro van a haber la clave (la palabra y su vector)
-//                int indiceAdentro = 0;
                 for (const auto& elementHash : hash) {
 
-//                    std::cout << indiceAdentro << std::endl;
 
-//                    indiceAdentro++;
-                    
                     //Datos para ingresarlos al nodo
                     string palabra = elementHash.first;
                     vector<int> vectorPaginas = elementHash.second;
@@ -77,31 +69,18 @@ class ProcesoIndexBusqueda{
                     //Sacar indice del elemento
                     int indice = std::distance(vectorHash.begin(), std::find(vectorHash.begin(), vectorHash.end(), hash));
                     //Datos para ingresarlos al nodo
-//                    std::cout << indiceAdentro << std::endl;
                     //Se agrega al arbol
                     arbol->insert(palabra, hashInt, 1, indice);
-//                    std::cout << indiceAdentro << std::endl;
                     
                 }
             }
-            //std::cout << "HAHA2" << std::endl;
 
             //Tengo este vector de hashtable de paginas
             vectorHashPaginas = extractorPalabras->getVectorHashPaginas();
 
-            //std::cout << vectorHashPaginas.size() << std::endl;
-            //Ahora tengo que usar los arboles b+
-            
-            //Se crean 30 arboles - uno para cada libro
-            //En el mismo orden del vector de los nombres del libro
-
 //            int indiceAfuera = 0;
             //std::cout << "HAHA2" << std::endl;
             for (const auto& hash : vectorHashPaginas) {
-
-//                std::cout << indiceAfuera << std::endl;
-
-//                indiceAfuera++;
 
                 //Creo un arbol por cada libro
                 BPlusTree *arbolB;
@@ -114,30 +93,16 @@ class ProcesoIndexBusqueda{
 
                 for (const auto& elementHash : hash) {
 
-//                    std::cout << indiceAdentro << std::endl;
-
-//                    indiceAdentro++;
-                    
-//                    Datos para ingresarlos al nodo
                     int numPagina = elementHash.first;
                     string contenidoPagina = elementHash.second;
                     //Datos para ingresarlos al nodo
-//                    std::cout << "Antes de agregado" << std::endl;
-//                    std::cout << numPagina << std::endl;
-//                    std::cout << contenidoPagina << std::endl;
                     //Se agrega al arbol
                     arbolB->insert(numPagina, contenidoPagina);
-//                    std::cout << "Después de agregado" << std::endl;
                     
                 }
-                //std::cout << "HAHA2" << std::endl;
                  //Despues de indexar todas sus palabras me encargo de meterlo al vector
                 vectorArbolesB.push_back(arbolB);
             }
-
-            //Hasta el momento todo esta en arboles
-            //Ahora para asegurar que todo esta guardado bien se inicializan las otras funciones despues del almacenamiento
-
 
             std::cout << "Indexacion lista" << endl;
             index = true;
@@ -188,8 +153,7 @@ class ProcesoIndexBusqueda{
         //Sin probar
         std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> searchPrincipal(vector<string> pfrase){
             //Tengo cada palabra
-            //Esto es un vector
-            //std::cout << "" << std::endl;
+
             vector<vector<int>> librosTotales;
             //Voy a crear un hashtable de las palabras claves que guarden un hashtable con los libros para poder acceder despues
             std::unordered_map<std::string, std::unordered_map<int, std::unordered_map<int, int>>> infoPalabrasPaginas;
@@ -231,21 +195,17 @@ class ProcesoIndexBusqueda{
                 hashPaginas[elementRanking.first] = paginas; // Usar elementRanking.first como clave
             }
             
-            //std::cout << "Marca" << std::endl;
+
             std::unordered_map<int, vector<int>> hashPaginasImportantes = construirRankingPaginas(hashPaginas); //el hash que guarda lo de esa funcion, guarda 3 paginas por cada libro
 
             //De aquí para abajo estará mi lógica, este comentario lo anoto por si es necesario borrar mi lógica debido a que es incorrecta
-            //std::cout << "Marca2-Prueba" << std::endl;
+
             frase = pfrase;
 
             impresion = busquedaBPlus(hashPaginasImportantes);
             //Ahora solo falta de alguna manera llamar a la funcion de busquedaBPlus para poder extraer el contenido de las pagina y sacar los parrafos que son
             impresionFinal = prepararImpresionFinal(impresion);
 
-
-            //Ahora tengo cada nombre de cada libro con su autor y por cada uno de ellos una serie de fragmentos donde se encuentran las palabras
-
-            
 
             return impresionFinal;
         }
@@ -264,7 +224,7 @@ class ProcesoIndexBusqueda{
                     string contenidoPagina = pagina.contenido;
                     int numeroPagina = pagina.numPagina;
                     string fragmentoParrafo = getParrafo(contenidoPagina);
-                    std:: cout << fragmentoParrafo << endl;
+                    
                     fragmentoStructParrafo parrafo;
                     parrafo.contenido = fragmentoParrafo;
                     parrafo.numPagina = numeroPagina;
@@ -313,8 +273,6 @@ class ProcesoIndexBusqueda{
                 }
             }
 
-            std::cout << fragmento << std::endl;
-
             return fragmento;
 
         }
@@ -349,22 +307,6 @@ class ProcesoIndexBusqueda{
                 }
                 pimpresionFinal[idLibro] = fragmentos;
             }
-            /*
-            std::cout << "Recorriendo el unordered_map:2" << std::endl;
-            for (const auto& entrada : impresionFinal) {
-                int clave = entrada.first;
-                const std::vector<std::string>& valores = entrada.second;
-
-                std::cout << "Clave: " << clave << std::endl;
-                    
-                // Recorrer el vector asociado a cada clave
-                std::cout << "Palabras asociadas:" << std::endl;
-                for (const auto& palabra : valores) {
-                    std::cout << palabra << std::endl;
-                }
-
-                std::cout << std::endl;
-            }*/
 
             return pimpresionFinal;
 
@@ -418,10 +360,6 @@ class ProcesoIndexBusqueda{
             }
             return rankingPaginasBueno;
 
-            
-
-            //Aqui ya se llama
-
         }
 
         
@@ -471,7 +409,6 @@ class ProcesoIndexBusqueda{
 
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
-        //Sin probar
         //Esta funcion srive para retornar un vector de int de aquellos valores que se encuentran repetidos en todos los otros vectores
         std::vector<int> encontrarValoresComunes(const std::vector<std::vector<int>>& vectores) {
             // Crea un conjunto para almacenar los valores comunes
@@ -500,7 +437,6 @@ class ProcesoIndexBusqueda{
         //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-        //Sin probar
         //funcion para indexar
         //esta funcion es para extraer del vector de paginas y colocarlo en un hashtable
         std::unordered_map<int, int> crearHash(vector<int> pvector){
@@ -510,31 +446,9 @@ class ProcesoIndexBusqueda{
                 int value = pvector.at(i);
                 counts[value]++;
             }
-            /*
-            for (const auto& entry : counts) {
-                std::cout << entry.first << " aparece " << entry.second << " veces" << std::endl;
-            }
-            */
             return counts;
         }
 
-        //----------------------------------------------------------------------------------------------------------------------------------------------
-
-        //Prueba de indexacion
-        /*std::unordered_map<int, int> crearHash2(vector<int> pvector){
-            std::unordered_map<int, int> counts;
-
-            for (int i = 0; i < pvector.size(); ++i) {
-                int value = pvector[i];
-                counts[value]++;
-            }
-
-            for (const auto& entry : counts) {
-                std::cout << entry.first << " aparece " << entry.second << " veces" << std::endl;
-            }
-            
-            return counts;
-        }*/
 
         //----------------------------------------------------------------------------------------------------------------------------------------------}
 

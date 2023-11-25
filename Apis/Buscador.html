@@ -68,7 +68,7 @@
             var frase = document.getElementById('search-input').value;
     
             // Realizar la solicitud al servidor
-            fetch('http://localhost:8088/api/busqueda', {
+            fetch('http://localhost:8086/api/busqueda', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -90,20 +90,56 @@
             resultContainer.innerHTML = '';
 
             if (typeof data === 'object') {
+                // Obtener el tipo de género y la URL de la imagen
+                var genero = data.tipoGenero;
+                var urlImagen = data.UrlImagen;
+
+                // Crear elementos para mostrar la imagen y el género
+                var generoElement = document.createElement('p');
+                generoElement.textContent = 'Género: ' + genero;
+                resultContainer.appendChild(generoElement);
+
+                // Mostrar la URL de la imagen como texto
+                var imagenElement = document.createElement('p');
+                imagenElement.textContent = 'URL de la imagen: ' + urlImagen;
+                resultContainer.appendChild(imagenElement);
+
+                // Mostrar la información de los libros y sus contenidos
                 for (const [libro, fragmentos] of Object.entries(data)) {
-                    for (const [pagina, contenido] of Object.entries(fragmentos)) {
-                        var listItem = document.createElement('li');
-                        listItem.className = 'result-item';
-                        listItem.textContent = 'Libro: ' + libro + ', Página: ' + pagina + ', Contenido: ' + contenido;
-                        resultContainer.appendChild(listItem);
+                    if (libro !== 'tipoGenero' && libro !== 'UrlImagen') {
+                        var libroItem = document.createElement('div');
+                        libroItem.className = 'result-item';
+
+                        var titulo = document.createElement('h3');
+                        titulo.textContent = 'Libro: ' + libro;
+                        libroItem.appendChild(titulo);
+
+                        for (const [pagina, contenido] of Object.entries(fragmentos)) {
+                            var paginaItem = document.createElement('div');
+                            paginaItem.className = 'pagina';
+
+                            var paginaInfo = document.createElement('p');
+                            paginaInfo.textContent = 'Página: ' + pagina;
+                            paginaItem.appendChild(paginaInfo);
+
+                            var contenidoInfo = document.createElement('p');
+                            contenidoInfo.textContent = 'Contenido: ' + contenido;
+                            paginaItem.appendChild(contenidoInfo);
+
+                            libroItem.appendChild(paginaItem);
+                        }
+
+                        resultContainer.appendChild(libroItem);
                     }
                 }
             } else {
-                var errorItem = document.createElement('li');
+                var errorItem = document.createElement('div');
                 errorItem.textContent = 'Los datos recibidos no son válidos.';
                 resultContainer.appendChild(errorItem);
             }
         }
+
+
 
     </script>
 </body>
