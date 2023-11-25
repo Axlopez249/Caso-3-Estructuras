@@ -85,18 +85,17 @@ public:
                 
 
                 std::string requestBody = request.substr(bodyStart + 4);
-                cout << "cuerpo del json de recibida: " + requestBody << endl;
+                
 
                 if(requestBody.compare("{\"frase\":\"\"}") != 0) {
+                    cout << "cuerpo del json de recibida: " + requestBody << endl;
+
                     std::vector<string> frase = obtenerFraseDeBusqueda(requestBody);
                     cout << "" << endl;
-                    for (const auto &palabr : frase)
-                    {
-                        cout << "palabra de la frase: " + palabr << endl;
-                    }
                     
+                    cout << "La frase es: " + vfrase << endl;
                     
-                    std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> informacion = proceso->searchPrincipal(frase);
+                    std::vector<std::pair<string, std::vector<fragmentoStructParrafo>>> informacion;
                     
                     //Llamo mi clase de chatgpt
                     Chatgpt extractorGenero;
@@ -104,23 +103,33 @@ public:
 
                     //Extraigo el genero de la frase con la clase
                     
-                    std::string promptGenero = "Dame un genero de estos: negativo, positivo, neutro, misterioso, novela, fantasía relacionado para esta frase: " + vfrase;
+                    std::string promptGenero = "Dame solo un genero de estos: negativo, positivo, neutro, misterioso, novela, fantasía relacionado para esta frase: " + vfrase;
                     std::string promptImagen = "Toma un sustantivo o la palabra mas importante de esta frase: " + vfrase;
+                    std::string genero = "";
+                    std::string palabraBusquedaImagen = "";
+                    std::string imagen = "";
                     
-                    extractorGenero.getRespuesta(promptGenero);
-                    std::string genero = extractorGenero.getGenero();
-                    cout << "" << endl;
-                    cout << "El genero es " + genero << endl;
+                    if (vfrase != "")
+                    {
+                        informacion = proceso->searchPrincipal(frase);
+                        extractorGenero.getRespuesta(promptGenero);
+                        genero = extractorGenero.getGenero();
+                        cout << "" << endl;
+                        cout << "El genero es " + genero << endl;
 
-                    extractorImagen.getRespuesta(promptImagen);
-                    std::string palabraBusquedaImagen = extractorImagen.getPalabraImportante(frase);
+                        extractorImagen.getRespuesta(promptImagen);
+                        palabraBusquedaImagen = extractorImagen.getPalabraImportante(frase);
 
-                    cout << "la palabra para la imagen es: " +  palabraBusquedaImagen << endl;
+                        cout << "la palabra para la imagen es: " +  palabraBusquedaImagen << endl;
 
-                    ApiImagen pixabay(palabraBusquedaImagen);
-                    std::string imagen = pixabay.getUrl();
-                    cout << "el url de la imagen es: " +  imagen << endl;
-                    // Responder con el JSON como la respuesta de la solicitud
+                        ApiImagen pixabay(palabraBusquedaImagen);
+                        imagen = pixabay.getUrl();
+                        cout << "el url de la imagen es: " +  imagen << endl;
+                        // Responder con el JSON como la respuesta de la solicitud
+                    }
+                    
+
+                    
                     std::string responseBody = construirRespuestaJSON(informacion, genero, imagen);
 
                     cout << "La respuesta final es: "<< endl;

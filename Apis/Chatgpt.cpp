@@ -37,7 +37,7 @@ public:
         string prompt = "Usuario:" + promptv + "\nAsistente: Mi nombre es GPT-3.5. ¿En qué puedo ayudarte hoy?";
 
         // Configura la clave de API
-        string api_key = "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";
+        string api_key = "";
 
         // Inicializa libcurl
         curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -81,7 +81,7 @@ public:
                 json jsonResponse = json::parse(response_data);
                 if (jsonResponse.count("choices") > 0 && jsonResponse["choices"].is_array() && jsonResponse["choices"].size() > 0) {
                     respuestaAsistente = jsonResponse["choices"][0]["message"]["content"];
-                    //cout << respuestaAsistente << endl;
+                    cout << respuestaAsistente << endl;
                 }
                 
             }
